@@ -1,0 +1,280 @@
+<!DOCTYPE html><html><head>
+
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="shortcut icon" href="/openemr/public/images/logos/core/favicon/favicon.ico?t=1764316914">
+
+<link rel="stylesheet" href="/openemr/public/themes/style_light.css?v=78">
+
+<script src="/openemr/public/assets/jquery/dist/jquery.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/bootstrap/dist/js/bootstrap.bundle.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/js/utility.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/js/common.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/textformat.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/dialog.js?v=78" type="text/javascript"></script>
+
+
+<title>Address Book</title>
+
+<!-- style tag moved into proper CSS file -->
+
+</head>
+
+<body class="body_top">
+
+<div class="container-fluid">
+    <div class="nav navbar-fixed-top body_title">
+        <div class="col-md-12">
+            <h3>Address Book</h3>
+
+        <form class="navbar-form" method="post" action="addrbook_list.php" onsubmit="return top.restoreSession()">
+            <input type="hidden" name="csrf_token_form" value="7e2f47f74d3159e3dccbc5b5a490217b5db77b0c" style="">
+            <input type="hidden" name="popup" value="0" style="">
+
+                <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-2">
+                    <label for="form_organization">Organization:</label>
+                    <input type="text" class="form-control inputtext" name="form_organization" size="10" value="" title="All or part of the organization" style="">&nbsp;
+                    </div>
+                    <div class="col-sm-2">
+                    <label for="form_fname">First Name:</label>
+                    <input type="text" class="form-control inputtext" name="form_fname" size="10" value="" title="All or part of the first name" style="">&nbsp;
+                    </div>
+                    <div class="col-sm-2">
+                    <label for="form_lname">Last Name:</label>
+                    <input type="text" class="form-control inputtext" name="form_lname" size="10" value="" title="All or part of the last name" style="">&nbsp;
+                    </div>
+                    <div class="col-sm-2">
+                    <label for="form_specialty">Specialty:</label>
+                    <input type="text" class="form-control inputtext" name="form_specialty" size="10" value="" title="Any part of the desired specialty" style="">&nbsp;
+                    </div>
+                    <div class="col-sm-2">
+                    <label for="form_npi">Specialty:</label>
+                    <input type="text" class="form-control inputtext" name="form_npi" size="10" value="" title="Any part of the desired NPI" style="">&nbsp;
+                    </div>
+                    <div class="col-sm-2">
+                    <label>Type: </label><select name="form_abook_type" id="form_abook_type" class="form-control" title=""><option value="" selected="">All</option>
+<option value="ord_img">Imaging Service</option>
+<option value="ord_imm">Immunization Service</option>
+<option value="ord_lab">Lab Service</option>
+<option value="spe">Specialist</option>
+<option value="vendor">Vendor</option>
+<option value="dist">Distributor</option>
+<option value="ccda">Care Coordination</option>
+<option value="oth">Other</option>
+<option value="emr_direct">EMR Direct</option>
+<option value="external_provider">External Provider</option>
+<option value="external_org">External Organization</option>
+<option value="bill_svc">Billing Service</option></select>                    </div>
+                    </div>
+                    <input type="checkbox" id="formExternal" name="form_external" value="1" title="Omit internal users?" style="">
+                    <label for="formExternal">External Only</label>
+                    <input type="button" class="btn btn-primary" value="Add New" onclick="doedclick_add(document.forms[0].form_abook_type.value)" style="">&nbsp;&nbsp;
+                    <input type="submit" title="Use % alone in a field to just sort on that column" class="btn btn-primary btn-search" name="form_search" value="Search" style="">
+                    </div>
+        </form>
+    </div>
+    </div>
+<div style="margin-top: 110px;" class="table-responsive">
+<table class="table table-sm table-bordered table-striped table-hover">
+ <thead>
+  <tr><th title="Click to view or edit">Organization</th>
+  <th>Name</th>
+  <th>Local</th><!-- empty for external -->
+  <th>Type</th>
+  <th>Specialty</th>
+  <th>NPI</th>
+  <th>Phone(W)</th>
+  <th>Mobile</th>
+  <th>Fax</th>
+  <th>Email</th>
+  <th>Street</th>
+  <th>City</th>
+  <th>State</th>
+  <th>Postal</th>
+ </tr></thead>
+ <tbody><tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;6&quot;)" title="Edit Donna  Lee">
+  <td></td>
+  <td>Donna  Lee</td>
+  <td>*</td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;10&quot;)" title="Edit Taif  Saeed">
+  <td></td>
+  <td>Taif  Saeed</td>
+  <td>*</td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;1&quot;)" title="Edit Billy  Smith">
+  <td></td>
+  <td>Billy  Smith</td>
+  <td>*</td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;5&quot;)" title="Edit Fred  Stone">
+  <td></td>
+  <td>Fred  Stone</td>
+  <td>*</td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;12&quot;)" title="Edit Test  User">
+  <td></td>
+  <td>Test  User</td>
+  <td>*</td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;15&quot;)" title="Edit Emily  Chen">
+  <td></td>
+  <td>Emily  Chen</td>
+  <td></td>
+  <td>Other</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td>emily.chen@example.com</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;14&quot;)" title="Edit John  Doe">
+  <td></td>
+  <td>John  Doe</td>
+  <td></td>
+  <td>Other</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td>john.doe@example.com</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;16&quot;)" title="Edit Michael  Singh">
+  <td></td>
+  <td>Michael  Singh</td>
+  <td></td>
+  <td>Other</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td>michael.singh@example.com</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+ </tr>
+ <tr class="address_names detail" style="cursor:pointer" onclick="doedclick_edit(&quot;13&quot;)" title="Edit TestFirst5177  TestLast5177">
+  <td>Test Organization</td>
+  <td>TestFirst5177  TestLast5177</td>
+  <td></td>
+  <td><span> <i class="fa fas fa-exclamation-circle ml-1"></i></span></td>
+  <td>General Practice</td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td>test5177@example.com</td>
+  <td></td>
+  <td>Test City</td>
+  <td></td>
+  <td>12345</td>
+ </tr>
+</tbody></table>
+</div>
+
+<script>
+
+
+// Callback from popups to refresh this display.
+function refreshme() {
+ // location.reload();
+ document.forms[0].submit();
+}
+
+// Process click to pop up the add window.
+function doedclick_add(type) {
+ top.restoreSession();
+ let url = 'addrbook_edit.php?type=' + encodeURIComponent(type);
+ const urlParams = new URLSearchParams(window.location.search);
+ if (urlParams.has("popup")) {
+    url += "&popup=" + urlParams.get("popup");
+ }
+ dlgopen(url, '_blank', 650, (screen.availHeight * 75/100));
+}
+
+// Process click to pop up the edit window.
+function doedclick_edit(userid) {
+ let rtn_selection = 0;
+ if(rtn_selection) {
+    dlgclose('contactCallBack', userid);
+ }
+ top.restoreSession();
+ dlgopen('addrbook_edit.php?userid=' + encodeURIComponent(userid), '_blank', 650, (screen.availHeight * 75/100));
+}
+
+</script>
+</div>
+
+
+</body></html>

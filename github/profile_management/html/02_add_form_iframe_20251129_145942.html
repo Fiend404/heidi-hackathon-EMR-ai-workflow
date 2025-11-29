@@ -1,0 +1,732 @@
+<html><head>
+<title>Add New Entry</title>
+
+    
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="shortcut icon" href="/openemr/public/images/logos/core/favicon/favicon.ico?t=1764316914">
+
+<link rel="stylesheet" href="/openemr/public/themes/style_light.css?v=78">
+
+<script src="/openemr/public/assets/jquery/dist/jquery.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/bootstrap/dist/js/bootstrap.bundle.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/js/utility.js?v=78" type="text/javascript"></script>
+<script src="/openemr/interface/main/tabs/js/include_opener.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/textformat.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/dialog.js?v=78" type="text/javascript"></script>
+
+
+<style>
+.inputtext {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+</style>
+
+<script>
+
+ var type_options_js = Array();
+    type_options_js["bill_svc"]="3";
+type_options_js["ccda"]="2";
+type_options_js["dist"]="3";
+type_options_js["emr_direct"]="4";
+type_options_js["external_org"]="1";
+type_options_js["external_provider"]="1";
+type_options_js["ord_img"]="3";
+type_options_js["ord_imm"]="3";
+type_options_js["ord_lab"]="3";
+type_options_js["oth"]="1";
+type_options_js["spe"]="2";
+type_options_js["vendor"]="3";
+
+ // Process to customize the form by type
+ function typeSelect(a) {
+   if(a=='ord_lab'){
+      $('#cpoe_span').css('display','inline');
+  } else {
+       $('#cpoe_span').css('display','none');
+       $('#form_cpoe').prop('checked', false);
+  }
+  if (type_options_js[a] == 3) {
+   // Company centric:
+   //   1) Hide the person Name entries
+   //   2) Hide the Specialty entry
+   //   3) Show the director Name entries
+   $(".nameRow").hide();
+   $(".specialtyRow").hide();
+   $(".nameDirectorRow").show();
+  }
+  else {
+   // Person centric:
+   //   1) Hide the director Name entries
+   //   2) Show the person Name entries
+   //   3) Show the Specialty entry
+   $(".nameDirectorRow").hide();
+   $(".nameRow").show();
+   $(".specialtyRow").show();
+  }
+ }
+</script>
+
+</head>
+
+<body class="body_top">
+
+<script>
+ $(function () {
+  // customize the form via the type options
+  typeSelect(null);
+  if(typeof abook_type != 'undefined' && abook_type == 'ord_lab') {
+    $('#cpoe_span').css('display','inline');
+   }
+ });
+</script>
+
+<form method="post" name="theform" id="theform" action="addrbook_edit.php?userid=">
+<input type="hidden" name="csrf_token_form" value="58bc407d51bbd0b5cf282dd3680e00f296e68306" style="">
+<div class="form-row">
+    <div class="col-2">
+        <label class="font-weight-bold col-form-label col-form-label-sm">Type:</label>
+    </div>
+    <div class="col">
+        <select name="form_abook_type" id="form_abook_type" class="form-control form-control-sm" onchange="typeSelect(this.value)" title=""><option value="" selected="">Unassigned</option>
+<option value="ord_img">Imaging Service</option>
+<option value="ord_imm">Immunization Service</option>
+<option value="ord_lab">Lab Service</option>
+<option value="spe">Specialist</option>
+<option value="vendor">Vendor</option>
+<option value="dist">Distributor</option>
+<option value="ccda">Care Coordination</option>
+<option value="oth">Other</option>
+<option value="emr_direct">EMR Direct</option>
+<option value="external_provider">External Provider</option>
+<option value="external_org">External Organization</option>
+<option value="bill_svc">Billing Service</option></select>    </div>
+</div>
+
+<div class="form-row nameRow my-1">
+    <div class="col-auto">
+        <label for="title" class="font-weight-bold col-form-label col-form-label-sm">Name:</label>
+    </div>
+    <div class="col-auto">
+        <select name="form_title" id="form_title" class="form-control  form-control-sm" title=""><option value="" selected=""> </option>
+<option value="Mr.">Mr.</option>
+<option value="Mrs.">Mrs.</option>
+<option value="Ms.">Ms.</option>
+<option value="Dr.">Dr.</option></select>    </div>
+    <div class="col-auto">
+        <label for="form_lname" class="font-weight-bold col-form-label col-form-label-sm">Last:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="10" name="form_lname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+    </div>
+    <div class="col-auto">
+        <label for="form_fname" class="font-weight-bold col-form-label col-form-label-sm">First:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="10" name="form_fname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+    </div>
+    <div class="col-auto">
+        <label for="form_mname" class="font-weight-bold col-form-label col-form-label-sm">Middle:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="4" name="form_mname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+    </div>
+    <div class="col-auto">
+        <label for="form_suffix" class="font-weight-bold col-form-label col-form-label-sm">Suffix:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="4" name="form_suffix" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+    </div>
+</div>
+
+<div class="form-row specialtyRow my-1">
+    <div class="col-2">
+        <label for="form_specialty" class="font-weight-bold col-form-label col-form-label-sm">Specialty:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="40" name="form_specialty" maxlength="250" value="" class="form-control form-control-sm inputtext w-100" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_organization" class="font-weight-bold col-form-label col-form-label-sm">Organization:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="40" name="form_organization" maxlength="250" value="" class="form-control form-control-sm inputtext" style="">
+    <span id="cpoe_span" style="display:none;">
+        <input type="checkbox" title="CPOE" name="form_cpoe" id="form_cpoe" value="1" style="">
+        <label for="form_cpoe" class="font-weight-bold">CPOE</label>
+   </span>
+    </div>
+</div>
+<div class="nameDirectorRow" style="display: none;">
+    <label for="director_title" class="font-weight-bold col-form-label col-form-label-sm">Director Name:</label>
+    <div class="form-row my-1">
+        <div class="col-auto">
+            <select name="form_director_title" id="form_director_title" class="form-control  form-control-sm" title=""><option value="" selected=""> </option>
+<option value="Mr.">Mr.</option>
+<option value="Mrs.">Mrs.</option>
+<option value="Ms.">Ms.</option>
+<option value="Dr.">Dr.</option></select>        </div>
+        <div class="col-auto">
+            <label for="form_director_lname" class="font-weight-bold col-form-label col-form-label-sm">Last:</label>
+        </div>
+        <div class="col-auto">
+            <input type="text" size="10" name="form_director_lname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+        </div>
+        <div class="col-auto">
+            <label for="form_director_fname" class="font-weight-bold col-form-label col-form-label-sm">First:</label>
+        </div>
+        <div class="col-auto">
+            <input type="text" size="10" name="form_director_fname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+        </div>
+        <div class="col-auto">
+            <label for="form_director_mname" class="font-weight-bold col-form-label col-form-label-sm">Middle:</label>
+        </div>
+        <div class="col-auto">
+            <input type="text" size="4" name="form_director_mname" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+        </div>
+        <div class="col-auto">
+            <label for="form_director_suffix" class="font-weight-bold col-form-label col-form-label-sm">Suffix:</label>
+        </div>
+        <div class="col-auto">
+            <input type="text" size="4" name="form_director_suffix" class="form-control form-control-sm inputtext" maxlength="50" value="" style="">
+        </div>
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_valedictory" class="font-weight-bold col-form-label col-form-label-sm">Valedictory:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="40" name="form_valedictory" maxlength="250" value="" class="form-control form-control-sm inputtext" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_phone" class="font-weight-bold col-form-label col-form-label-sm">Home Phone:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="11" name="form_phone" value="" maxlength="30" class="form-control form-control-sm inputtext" style="">
+    </div>
+    <div class="col-2">
+        <label for="form_phonecell" class="font-weight-bold col-form-label col-form-label-sm">Mobile:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="11" name="form_phonecell" maxlength="30" value="" class="form-control form-control-sm inputtext" style="">
+    </div>
+</div>
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_phonew1" class="font-weight-bold col-form-label col-form-label-sm">Work Phone:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="11" name="form_phonew1" value="" maxlength="30" class="form-control form-control-sm inputtext" style="">
+    </div>
+    <div class="col-1">
+        <label class="font-weight-bold col-form-label col-form-label-sm">2nd:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="11" name="form_phonew2" value="" maxlength="30" class="form-control form-control-sm inputtext" style="">
+    </div>
+    <div class="col-1">
+        <label class="font-weight-bold col-form-label col-form-label-sm">Fax:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="11" name="form_fax" value="" maxlength="30" class="form-control form-control-sm inputtext" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_assistant" class="font-weight-bold col-form-label col-form-label-sm">Assistant:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_assistant" maxlength="250" value="" class="form-control form-control-sm inputtext w-100" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_email" class="font-weight-bold col-form-label col-form-label-sm">Email:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_email" maxlength="250" value="" class="form-control form-control-sm inputtext w-100" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_email_direct" class="font-weight-bold col-form-label col-form-label-sm">Trusted Email:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_email_direct" maxlength="250" value="" class="form-control form-control-sm inputtext" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_url" class="font-weight-bold col-form-label col-form-label-sm">Website:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_url" maxlength="250" value="" class="form-control form-control-sm inputtext" style="">
+    </div>
+</div>
+
+<div class="form-row my-1 align-items-center">
+    <div class="col-2">
+        <label for="form_street form_streetb" class="font-weight-bold col-form-label col-form-label-sm">Main Address:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_street" maxlength="60" value="" class="form-control form-control-sm inputtext mb-1" placeholder="Address Line 1" style="">
+        <input type="text" size="40" name="form_streetb" maxlength="60" value="" class="form-control form-control-sm inputtext mt-1" placeholder="Address Line 2" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_city" class="font-weight-bold col-form-label col-form-label-sm">City:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="10" name="form_city" maxlength="30" value="" class="form-control form-control-sm inputtext" placeholder="City" style="">
+    </div>
+    <div class="col-2">
+        <label for="form_state" class="font-weight-bold col-form-label col-form-label-sm">State/county:</label>
+    </div>
+    <div class="col">
+        <select name="form_state" id="form_state" class="form-control form-control-sm" onchange="typeSelect(this.value)" title=""><option value="" selected="">Unassigned</option>
+<option value="AL">Alabama</option>
+<option value="AK">Alaska</option>
+<option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option>
+<option value="CA">California</option>
+<option value="CO">Colorado</option>
+<option value="CT">Connecticut</option>
+<option value="DE">Delaware</option>
+<option value="DC">District of Columbia</option>
+<option value="FL">Florida</option>
+<option value="GA">Georgia</option>
+<option value="HI">Hawaii</option>
+<option value="ID">Idaho</option>
+<option value="IL">Illinois</option>
+<option value="IN">Indiana</option>
+<option value="IA">Iowa</option>
+<option value="KS">Kansas</option>
+<option value="KY">Kentucky</option>
+<option value="LA">Louisiana</option>
+<option value="ME">Maine</option>
+<option value="MD">Maryland</option>
+<option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option>
+<option value="MN">Minnesota</option>
+<option value="MS">Mississippi</option>
+<option value="MO">Missouri</option>
+<option value="MT">Montana</option>
+<option value="NE">Nebraska</option>
+<option value="NV">Nevada</option>
+<option value="NH">New Hampshire</option>
+<option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option>
+<option value="NY">New York</option>
+<option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option>
+<option value="OH">Ohio</option>
+<option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option>
+<option value="PA">Pennsylvania</option>
+<option value="PR">Puerto Rico</option>
+<option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option>
+<option value="SD">South Dakota</option>
+<option value="TN">Tennessee</option>
+<option value="TX">Texas</option>
+<option value="UT">Utah</option>
+<option value="VT">Vermont</option>
+<option value="VA">Virginia</option>
+<option value="WA">Washington</option>
+<option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option>
+<option value="WY">Wyoming</option></select>    </div>
+    <div class="col-2">
+        <label for="form_zip" class="font-weight-bold col-form-label col-form-label-sm">Postal code:</label>
+    </div>
+    <div class="col">
+        <input type="text" size="10" name="form_zip" maxlength="20" value="" class="form-control form-control-sm inputtext" placeholder="Postal code" style="">
+    </div>
+</div>
+
+<div class="form-row my-1 align-items-center">
+    <div class="col-2">
+        <label for="form_street2 form_streetb2" class="font-weight-bold col-form-label col-form-label-sm">Alt Address:</label>
+    </div>
+    <div class="col-10">
+        <input type="text" size="40" name="form_street2" maxlength="60" value="" class="form-control form-control-sm mb-1 inputtext" placeholder="Address Line 1" style="">
+        <input type="text" size="40" name="form_streetb2" maxlength="60" value="" class="form-control form-control-sm mt-1 inputtext" placeholder="Address Line 2" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-2">
+        <label for="form_city2" class="font-weight-bold col-form-label col-form-label-sm">Alt City:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="10" name="form_city2" maxlength="30" value="" class="form-control form-control-sm inputtext" placeholder="Alt City" style="">
+    </div>
+    <div class="col-auto">
+        <label for="form_state2" class="font-weight-bold col-form-label col-form-label-sm">Alt State/county:</label>
+    </div>
+    <div class="col-auto">
+    <select name="form_state2" id="form_state2" class="form-control form-control-sm" onchange="typeSelect(this.value)" title=""><option value="" selected="">Unassigned</option>
+<option value="AL">Alabama</option>
+<option value="AK">Alaska</option>
+<option value="AZ">Arizona</option>
+<option value="AR">Arkansas</option>
+<option value="CA">California</option>
+<option value="CO">Colorado</option>
+<option value="CT">Connecticut</option>
+<option value="DE">Delaware</option>
+<option value="DC">District of Columbia</option>
+<option value="FL">Florida</option>
+<option value="GA">Georgia</option>
+<option value="HI">Hawaii</option>
+<option value="ID">Idaho</option>
+<option value="IL">Illinois</option>
+<option value="IN">Indiana</option>
+<option value="IA">Iowa</option>
+<option value="KS">Kansas</option>
+<option value="KY">Kentucky</option>
+<option value="LA">Louisiana</option>
+<option value="ME">Maine</option>
+<option value="MD">Maryland</option>
+<option value="MA">Massachusetts</option>
+<option value="MI">Michigan</option>
+<option value="MN">Minnesota</option>
+<option value="MS">Mississippi</option>
+<option value="MO">Missouri</option>
+<option value="MT">Montana</option>
+<option value="NE">Nebraska</option>
+<option value="NV">Nevada</option>
+<option value="NH">New Hampshire</option>
+<option value="NJ">New Jersey</option>
+<option value="NM">New Mexico</option>
+<option value="NY">New York</option>
+<option value="NC">North Carolina</option>
+<option value="ND">North Dakota</option>
+<option value="OH">Ohio</option>
+<option value="OK">Oklahoma</option>
+<option value="OR">Oregon</option>
+<option value="PA">Pennsylvania</option>
+<option value="PR">Puerto Rico</option>
+<option value="RI">Rhode Island</option>
+<option value="SC">South Carolina</option>
+<option value="SD">South Dakota</option>
+<option value="TN">Tennessee</option>
+<option value="TX">Texas</option>
+<option value="UT">Utah</option>
+<option value="VT">Vermont</option>
+<option value="VA">Virginia</option>
+<option value="WA">Washington</option>
+<option value="WV">West Virginia</option>
+<option value="WI">Wisconsin</option>
+<option value="WY">Wyoming</option></select>    </div>
+    <div class="col-auto">
+        <label for="form_zip2" class="font-weight-bold col-form-label col-form-label-sm">Alt Postal code:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="10" name="form_zip2" maxlength="20" value="" class="form-control form-control-sm inputtext" placeholder="Alt Postal code" style="">
+    </div>
+</div>
+
+<div class="form-row my-1">
+    <div class="col-auto">
+        <label for="form_upin" class="font-weight-bold col-form-label col-form-label-sm">UPIN:</label>
+    </div>
+    <div class="col-auto">
+        <input type="text" size="6" name="form_upin" maxlength="6" value="" class="form-control form-control-sm inputtext" style="">
+   </div>
+   <div class="col-auto">
+        <label for="form_npi" class="font-weight-bold col-form-label col-form-label-sm">NPI:</label>
+   </div>
+   <div class="col-auto">
+        <input type="text" size="10" name="form_npi" maxlength="10" value="" class="form-control form-control-sm inputtext" style="">
+   </div>
+   <div class="col-auto">
+        <label for="form_federaltaxid" class="font-weight-bold col-form-label col-form-label-sm">TIN:</label>
+   </div>
+   <div class="col-auto">
+        <input type="text" size="10" name="form_federaltaxid" maxlength="10" value="" class="form-control form-control-sm inputtext" style="">
+    </div>
+    <div class="col-auto">
+        <label for="form_taxonomy" class="font-weight-bold col-form-label col-form-label-sm">Taxonomy:</label>
+    </div>
+   <div class="col-auto">
+        <input type="text" size="10" name="form_taxonomy" maxlength="10" value="" class="form-control form-control-sm inputtext" style="">
+   </div>
+</div>
+<div class="form-group">
+    <label for="form_notes" class="font-weight-bold col-form-label col-form-label-sm">Notes:</label>
+    <textarea rows="3" cols="40" name="form_notes" wrap="virtual" class="form-control inputtext w-100" style=""></textarea>
+</div>
+
+<br>
+
+<input type="submit" class="btn btn-primary" name="form_save" value="Save" style="">
+
+
+&nbsp;
+<input type="button" class="btn btn-secondary" value="Cancel" onclick="window.close()" style="">
+<p></p>
+</form>
+<!--Page Form Validations--><!---Start of page  form validation--><!--//include new rules of submitme functionallity-->
+    <script src="/openemr/public/assets/moment/moment.js"></script>
+    <script src="/openemr/interface/../library/js/vendors/validate/validate_modified.js"></script>
+    <script src="/openemr/interface/../library/js/vendors/validate/validate_extend.js"></script>
+    
+<script>
+    
+    var g_date_format='0';
+
+function submitme(new_validate,e,form_id, constraints) {
+
+        top.restoreSession();
+
+        //Use the old validation script if no parameter sent (backward compatibility)
+        //if we want to use the "old" validate function (set in globals) the validate function that will be called is the one that
+        // was on code up to today (the validate library was not loaded ( look at the top of this file)
+        if (new_validate !== 1) {
+            var f = document.forms[0];
+            if (validate(f)) {
+                somethingChanged = false;
+                f.submit();
+            } else { //If there was an error prevent the form submit in order to display them
+                e.preventDefault();
+            }
+        } else { //If the new validation library is used :
+
+            //Variables used for the validation library and validation mechanism
+            /*Get the constraint from the DB-> LBF forms accordinf the form_id*/
+            if(constraints==undefined || constraints=='') {
+                                 constraints = [];
+            }
+            var valid = true ;
+
+            //We use a common error for all the errors because of the multilanguage capability of openemr
+            var form = document.querySelector("form#"+form_id);
+            //gets all the "elements" in the form and sends them to the validate library
+            //for more information @see https://validatejs.org/
+            var elements = validate.collectFormValues(form);
+            var element, new_key;
+
+            //before catch all values - clear filed that in display none, this will enable to fail on this fields.
+            for(var key in elements){
+                    //catch th element with the name because the id of select-multiple contain '[]'
+                   // and jquery throws error in those situation
+                    element = $('[name="'+ key + '"]');
+                    if(!$(element).is('select[multiple]')) {
+
+                            if($(element).parent().prop('style') != undefined && ($(element).parent().prop('style').visibility == 'hidden'|| element.parent().parent().css('display')== 'none')){
+                                $(element).val("");
+                            }
+
+                    }
+                }
+
+            //get the input value after romoving hide fields
+            elements = validate.collectFormValues(form);
+            //custom validate for multiple select(failed validate.js)
+            //the validate js cannot handle the LBF multiple select fields
+            for(var key in elements){
+
+                element = $('[name="'+ key + '"]');
+
+                if($(element).is('select[multiple]')) {
+
+                    new_key = key.substring(0, key.length - 2);
+                    if(validate.isObject(constraints[new_key])) {
+                        //check if select multiple does empty (empty or unassigned)
+                        if(constraints[new_key].presence && (elements[key].length == 0 || elements[key][0] == null )) {
+
+                            appendError(element, new_key);
+                            e.preventDefault();
+                            valid = false;
+                        }
+                    }
+                    //remove multi select key to prevent errors
+                    delete elements[key];
+                    delete constraints[new_key];
+                }
+            }
+
+            //error conatins an list of the elements and their errors
+            //set false full message because the name of the input not can be translated
+            var errors = validate(elements, constraints, {fullMessages: false});
+            if (typeof  errors !== 'undefined') {
+                //prevent default if trigger is submit button
+                if(typeof (e) !== 'undefined') {
+                    e.preventDefault();
+                }
+                showErrors(form, errors);
+                valid = false;
+            }else{
+                somethingChanged = false;
+            }
+
+            //In case there were errors they are displayed with this functionn
+            function showErrors(form, errors) {
+
+                for (var key in errors) {
+                    element = $('[name="'+ key + '"]');
+                    if (errors.hasOwnProperty(key)) {
+                        appendError(element, key, errors[key][0])
+                    }
+                }
+            }
+            /**
+            * append 'span' with error message
+            */
+            function appendError(input, id, message){
+
+                //append 'span' tag for error massages if not exist
+                if($("#error_" + id).length == 0) {
+                    //If have another element after the input
+                    if($(input).next().length > 0) {
+
+                        $(input).next().after("<span id='error_" + id +"' class='error-message' '></span>");
+
+                    } else {
+                        $(input).after("<span id='error_" + id +"' class='error-message'></span>");
+
+                    }
+                }
+                //show error message
+                //Validate.js enables to overwrite the error messages by adding 'message' to constraints json. if you want to use your custom message instead
+                //default message you need to add boolean property to the constraints json - 'custom_messages':true.
+                var error_msg = (typeof constraints.custom_messages !== 'undefined' && constraints.custom_messages) ? message : getErrorMessage(message);
+
+                var title= $(input).attr('title');
+                //if it's long title remove it from error message (this could destroy the UI)
+                if(title == undefined || title.length > 20) { title = "" }
+                $("#error_" + id).text(title +' '+error_msg);
+
+                $(input).addClass('error-border');
+
+                //mark the tub
+                var parent_div = $(input).parents('div.tab');
+                if($(parent_div).is('div')) {
+                    var div_id = $(parent_div).attr('id');
+                    var type_tab = div_id.substr(4);
+                    $('a#header_tab_'+type_tab).css('color', 'var(--danger)');
+                 }
+
+                //open tab for new patient form
+                parent_div = $(input).parents('div.section');
+                if(parent_div !== undefined) {
+                    $(parent_div).css('display' , 'block');
+                    div_id = $(parent_div).attr('id');
+                    if(div_id !== undefined) {
+                        div_id = div_id.substr(-1);
+                        var input_checkbox = document.getElementById('form_cb_' + div_id);
+                        input_checkbox.checked = true;
+                    }
+                }
+
+
+                //bind hide function on focus/select again
+                $(input).on('click focus select', function(){
+                    hideErrors(this, id);
+                });
+                //for datepicker button
+                if($(input).next().is('img')){
+                    $(input).next().click(function(){
+
+                        hideErrors($(this).prev(), id);
+                    });
+                }
+
+            }
+            /*
+            * hide error message
+            * @param element
+            **/
+            function hideErrors(input, id){
+                $(input).removeClass('error-border');
+                $("#error_" + id).text('');
+
+                var parent_div = $(input).parents('div.tab');
+                if($(parent_div).is('div')) {
+                    var div_id = $(parent_div).attr('id');
+                    var type_tab = div_id.substr(4);
+                    $('a#header_tab_'+type_tab).css('color', 'var(--black)');
+                }
+            }
+            /*
+            * Check if exist translation for current error message else return default message.
+            * In addition you can adding custom error message to the constraints json according validate.js instructions and add the translation here
+            * @param message
+            **/
+            function getErrorMessage(message){
+                //enable to translate error message
+                //todo - adding all the translations string from validate.js
+                // console.log(message);
+                switch (message){
+                    case 'Patient Name Required':
+                        return "Patient Name Required";
+                    case 'An end date later than the start date is required for repeated events!':
+                       return "An end date later than the start date is required for repeated events!";
+                    case 'Required field missing: Please enter the User Name':
+                        return "Required field missing: Please enter the User Name";
+                    case 'Please enter the password':
+                        return "Please enter the password";
+                    case 'Required field missing: Please enter the First name':
+                        return "Required field missing: Please enter the First name";
+                    case 'Required field missing: Please enter the Last name':
+                        return "Required field missing: Please enter the Last name";
+                    case 'Please choose a patient':
+                        return "Please choose a patient";
+                    case 'Must be future date':
+                        return "Must be future date";
+                    case 'Recipient required unless status is Done':
+                        return "Recipient required unless status is Done";
+                    default:
+                       return "is not valid";
+                }
+            }
+            //the result of validation
+            return valid;
+        }
+    }
+    //enable submit button until load submitme function
+    if(document.getElementById('submit_btn') != null) {
+        document.getElementById('submit_btn').disabled = false;
+    }
+</script>
+
+<script>$(function () {
+try{
+if(document.getElementsByName("theform").length>0)
+{
+var form = document.getElementsByName("theform");
+form[0].setAttribute("id","theform");
+//Use validation script js Validations-
+$("#theform").on("submit", function(event){
+
+var submitvalue = submitme(1,event,"theform",[]);
+ if(submitvalue){
+ 
+}
+else{
+ event.preventDefault();
+}
+});}}
+catch(err)
+{
+//log err - console.log(err)
+}});
+</script><!---End of page  form validation-->
+
+</body></html>

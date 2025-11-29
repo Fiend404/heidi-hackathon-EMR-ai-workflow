@@ -1,0 +1,1115 @@
+{
+  "metadata": {
+    "total_items": 136,
+    "enabled_items": 118,
+    "disabled_items": 18
+  },
+  "categories": {
+    "SCHEDULING": [
+      {
+        "name": "Calendar",
+        "selector": ".menuLabel.px-1:has-text('Calendar')",
+        "depth": 0,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Recalls",
+        "selector": ".menuLabel.px-1:has-text('Recalls')",
+        "depth": 0,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": null
+      }
+    ],
+    "PATIENT": [
+      {
+        "name": "Finder",
+        "selector": ".menuLabel.px-1:has-text('Finder')",
+        "depth": 0,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Patient",
+        "selector": ".dropdown-toggle:has-text('Patient')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Dashboard",
+        "selector": ".menuEntries .menuLabel:has-text('Dashboard')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Patient"
+      },
+      {
+        "name": "Visits",
+        "selector": ".dropdown-toggle:has-text('Visits')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Patient"
+      },
+      {
+        "name": "Create Visit",
+        "selector": ".menuEntries .menuLabel:has-text('Create Visit')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Visits"
+      },
+      {
+        "name": "Visit History",
+        "selector": ".menuEntries .menuLabel:has-text('Visit History')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Visits"
+      },
+      {
+        "name": "Records",
+        "selector": ".dropdown-toggle:has-text('Records')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Patient"
+      },
+      {
+        "name": "Patient Record Request",
+        "selector": ".menuEntries .menuLabel:has-text('Patient Record Request')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Records"
+      },
+      {
+        "name": "Patients",
+        "selector": ".dropdown-toggle:has-text('Patients')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Patient Reminders",
+        "selector": ".menuEntries .menuLabel:has-text('Patient Reminders')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Patients"
+      },
+      {
+        "name": "Merge Patients",
+        "selector": ".menuEntries .menuLabel:has-text('Merge Patients')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Patients"
+      },
+      {
+        "name": "Manage Duplicates",
+        "selector": ".menuEntries .menuLabel:has-text('Manage Duplicates')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Patients"
+      },
+      {
+        "name": "Portal Dashboard",
+        "selector": ".menuEntries .menuLabel:has-text('Portal Dashboard')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "Patient Education",
+        "selector": ".menuEntries .menuLabel:has-text('Patient Education')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "Popups",
+        "selector": ".dropdown-toggle:has-text('Popups')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Issues",
+        "selector": ".menuEntries .menuLabel:has-text('Issues')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      },
+      {
+        "name": "Export",
+        "selector": ".menuEntries .menuLabel:has-text('Export')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      },
+      {
+        "name": "Import",
+        "selector": ".menuEntries .menuLabel:has-text('Import')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      },
+      {
+        "name": "Letter",
+        "selector": ".menuEntries .menuLabel:has-text('Letter')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      }
+    ],
+    "CLINICAL": [
+      {
+        "name": "Referral",
+        "selector": ".menuEntries .menuLabel:has-text('Referral')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      }
+    ],
+    "BILLING": [
+      {
+        "name": "Fees",
+        "selector": ".dropdown-toggle:has-text('Fees')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Fee Sheet",
+        "selector": ".menuEntries .menuLabel:has-text('Fee Sheet')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Fees"
+      },
+      {
+        "name": "Payment",
+        "selector": ".menuEntries .menuLabel:has-text('Payment')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Fees"
+      },
+      {
+        "name": "Checkout",
+        "selector": ".menuEntries .menuLabel:has-text('Checkout')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Fees"
+      },
+      {
+        "name": "Billing Manager",
+        "selector": ".menuEntries .menuLabel:has-text('Billing Manager')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Fees"
+      },
+      {
+        "name": "Batch Payments",
+        "selector": ".menuEntries .menuLabel:has-text('Batch Payments')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Fees"
+      },
+      {
+        "name": "Posting Payments",
+        "selector": ".menuEntries .menuLabel:has-text('Posting Payments')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Fees"
+      },
+      {
+        "name": "EDI History",
+        "selector": ".menuEntries .menuLabel:has-text('EDI History')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Fees"
+      },
+      {
+        "name": "Sales",
+        "selector": ".menuEntries .menuLabel:has-text('Sales')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Cash Rec",
+        "selector": ".menuEntries .menuLabel:has-text('Cash Rec')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Front Rec",
+        "selector": ".menuEntries .menuLabel:has-text('Front Rec')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Pmt Method",
+        "selector": ".menuEntries .menuLabel:has-text('Pmt Method')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Collections and Aging",
+        "selector": ".menuEntries .menuLabel:has-text('Collections and Aging')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Pat Ledger",
+        "selector": ".menuEntries .menuLabel:has-text('Pat Ledger')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Financial Summary by Service Code",
+        "selector": ".menuEntries .menuLabel:has-text('Financial Summary by Service Code')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Payment Processing",
+        "selector": ".menuEntries .menuLabel:has-text('Payment Processing')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Pending Res",
+        "selector": ".menuEntries .menuLabel:has-text('Pending Res')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Statistics",
+        "selector": ".menuEntries .menuLabel:has-text('Statistics')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Financial"
+      },
+      {
+        "name": "Distribution",
+        "selector": ".menuEntries .menuLabel:has-text('Distribution')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Insurance"
+      },
+      {
+        "name": "Indigents",
+        "selector": ".menuEntries .menuLabel:has-text('Indigents')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Insurance"
+      },
+      {
+        "name": "Unique SP",
+        "selector": ".menuEntries .menuLabel:has-text('Unique SP')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Insurance"
+      }
+    ],
+    "PROCEDURES": [
+      {
+        "name": "Procedures",
+        "selector": ".dropdown-toggle:has-text('Procedures')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Providers",
+        "selector": ".menuEntries .menuLabel:has-text('Providers')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Configuration",
+        "selector": ".menuEntries .menuLabel:has-text('Configuration')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Load Compendium",
+        "selector": ".menuEntries .menuLabel:has-text('Load Compendium')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Pending Review",
+        "selector": ".menuEntries .menuLabel:has-text('Pending Review')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Patient Results",
+        "selector": ".menuEntries .menuLabel:has-text('Patient Results')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Lab Overview",
+        "selector": ".menuEntries .menuLabel:has-text('Lab Overview')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Batch Results",
+        "selector": ".menuEntries .menuLabel:has-text('Batch Results')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Electronic Reports",
+        "selector": ".menuEntries .menuLabel:has-text('Electronic Reports')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Lab Documents",
+        "selector": ".menuEntries .menuLabel:has-text('Lab Documents')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Procedures"
+      },
+      {
+        "name": "Chart Label",
+        "selector": ".menuEntries .menuLabel:has-text('Chart Label')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      },
+      {
+        "name": "Barcode Label",
+        "selector": ".menuEntries .menuLabel:has-text('Barcode Label')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      },
+      {
+        "name": "Address Label",
+        "selector": ".menuEntries .menuLabel:has-text('Address Label')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Popups"
+      }
+    ],
+    "REPORTS": [
+      {
+        "name": "Alerts",
+        "selector": ".menuEntries .menuLabel:has-text('Alerts')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Practice"
+      },
+      {
+        "name": "Lists",
+        "selector": ".menuEntries .menuLabel:has-text('Lists')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Forms"
+      },
+      {
+        "name": "Logs",
+        "selector": ".menuEntries .menuLabel:has-text('Logs')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Audit Log Tamper",
+        "selector": ".menuEntries .menuLabel:has-text('Audit Log Tamper')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Reports",
+        "selector": ".dropdown-toggle:has-text('Reports')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Clients",
+        "selector": ".dropdown-toggle:has-text('Clients')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Reports"
+      },
+      {
+        "name": "List",
+        "selector": ".menuEntries .menuLabel:has-text('List')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Rx",
+        "selector": ".menuEntries .menuLabel:has-text('Rx')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Patient List Creation",
+        "selector": ".menuEntries .menuLabel:has-text('Patient List Creation')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Message List",
+        "selector": ".menuEntries .menuLabel:has-text('Message List')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Clinical",
+        "selector": ".menuEntries .menuLabel:has-text('Clinical')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Referrals",
+        "selector": ".menuEntries .menuLabel:has-text('Referrals')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Immunization Registry",
+        "selector": ".menuEntries .menuLabel:has-text('Immunization Registry')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Report Results",
+        "selector": ".menuEntries .menuLabel:has-text('Report Results')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Standard Measures",
+        "selector": ".menuEntries .menuLabel:has-text('Standard Measures')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Automated Measures (AMC)",
+        "selector": ".menuEntries .menuLabel:has-text('Automated Measures (AMC)')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "2025 Real World Testing Report",
+        "selector": ".menuEntries .menuLabel:has-text('2025 Real World Testing Report')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Alerts Log",
+        "selector": ".menuEntries .menuLabel:has-text('Alerts Log')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Daily Report",
+        "selector": ".menuEntries .menuLabel:has-text('Daily Report')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Appointments",
+        "selector": ".menuEntries .menuLabel:has-text('Appointments')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Patient Flow Board",
+        "selector": ".menuEntries .menuLabel:has-text('Patient Flow Board')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Encounters",
+        "selector": ".menuEntries .menuLabel:has-text('Encounters')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Appt-Enc",
+        "selector": ".menuEntries .menuLabel:has-text('Appt-Enc')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Superbill",
+        "selector": ".menuEntries .menuLabel:has-text('Superbill')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Eligibility",
+        "selector": ".menuEntries .menuLabel:has-text('Eligibility')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Eligibility Response",
+        "selector": ".menuEntries .menuLabel:has-text('Eligibility Response')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Chart Activity",
+        "selector": ".menuEntries .menuLabel:has-text('Chart Activity')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Charts Out",
+        "selector": ".menuEntries .menuLabel:has-text('Charts Out')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Services",
+        "selector": ".menuEntries .menuLabel:has-text('Services')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Syndromic Surveillance",
+        "selector": ".menuEntries .menuLabel:has-text('Syndromic Surveillance')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clients"
+      },
+      {
+        "name": "Financial",
+        "selector": ".dropdown-toggle:has-text('Financial')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Reports"
+      },
+      {
+        "name": "Insurance",
+        "selector": ".dropdown-toggle:has-text('Insurance')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Reports"
+      },
+      {
+        "name": "Blank Forms",
+        "selector": ".dropdown-toggle:has-text('Blank Forms')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Reports"
+      },
+      {
+        "name": "Core",
+        "selector": ".dropdown-toggle:has-text('Core')",
+        "depth": 2,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Blank Forms"
+      },
+      {
+        "name": "Demographics",
+        "selector": ".menuEntries .menuLabel:has-text('Demographics')",
+        "depth": 3,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Core"
+      },
+      {
+        "name": "Superbill/Fee Sheet",
+        "selector": ".menuEntries .menuLabel:has-text('Superbill/Fee Sheet')",
+        "depth": 3,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Core"
+      },
+      {
+        "name": "Background Services",
+        "selector": ".menuEntries .menuLabel:has-text('Background Services')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Blank Forms"
+      },
+      {
+        "name": "Direct Message Log",
+        "selector": ".menuEntries .menuLabel:has-text('Direct Message Log')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Blank Forms"
+      },
+      {
+        "name": "IP Tracker",
+        "selector": ".menuEntries .menuLabel:has-text('IP Tracker')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Blank Forms"
+      }
+    ],
+    "MESSAGING": [
+      {
+        "name": "Messages",
+        "selector": ".menuLabel.px-1:has-text('Messages')",
+        "depth": 0,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Batch Communication Tool",
+        "selector": ".menuEntries .menuLabel:has-text('Batch Communication Tool')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      }
+    ],
+    "ADMIN": [
+      {
+        "name": "Modules",
+        "selector": ".dropdown-toggle:has-text('Modules')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Manage Modules",
+        "selector": ".menuEntries .menuLabel:has-text('Manage Modules')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Modules"
+      },
+      {
+        "name": "Carecoordination",
+        "selector": ".menuEntries .menuLabel:has-text('Carecoordination')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Modules"
+      },
+      {
+        "name": "Admin",
+        "selector": ".dropdown-toggle:has-text('Admin')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Config",
+        "selector": ".menuEntries .menuLabel:has-text('Config')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Clinic",
+        "selector": ".dropdown-toggle:has-text('Clinic')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Import Holidays",
+        "selector": ".menuEntries .menuLabel:has-text('Import Holidays')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clinic"
+      },
+      {
+        "name": "Practice",
+        "selector": ".dropdown-toggle:has-text('Practice')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Practice Settings",
+        "selector": ".menuEntries .menuLabel:has-text('Practice Settings')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Practice"
+      },
+      {
+        "name": "Rules",
+        "selector": ".menuEntries .menuLabel:has-text('Rules')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Practice"
+      },
+      {
+        "name": "Coding",
+        "selector": ".dropdown-toggle:has-text('Coding')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Codes",
+        "selector": ".menuEntries .menuLabel:has-text('Codes')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Coding"
+      },
+      {
+        "name": "Native Data Loads",
+        "selector": ".menuEntries .menuLabel:has-text('Native Data Loads')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Coding"
+      },
+      {
+        "name": "External Data Loads",
+        "selector": ".menuEntries .menuLabel:has-text('External Data Loads')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Coding"
+      },
+      {
+        "name": "Forms",
+        "selector": ".dropdown-toggle:has-text('Forms')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Forms Administration",
+        "selector": ".menuEntries .menuLabel:has-text('Forms Administration')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Forms"
+      },
+      {
+        "name": "Layouts",
+        "selector": ".menuEntries .menuLabel:has-text('Layouts')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Forms"
+      },
+      {
+        "name": "Document Templates",
+        "selector": ".menuEntries .menuLabel:has-text('Document Templates')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Documents"
+      },
+      {
+        "name": "System",
+        "selector": ".dropdown-toggle:has-text('System')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Backup",
+        "selector": ".menuEntries .menuLabel:has-text('Backup')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Files",
+        "selector": ".menuEntries .menuLabel:has-text('Files')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Language",
+        "selector": ".menuEntries .menuLabel:has-text('Language')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Certificates",
+        "selector": ".menuEntries .menuLabel:has-text('Certificates')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Diagnostics",
+        "selector": ".menuEntries .menuLabel:has-text('Diagnostics')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "API Clients",
+        "selector": ".menuEntries .menuLabel:has-text('API Clients')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "System"
+      },
+      {
+        "name": "Users",
+        "selector": ".menuEntries .menuLabel:has-text('Users')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Address Book",
+        "selector": ".menuEntries .menuLabel:has-text('Address Book')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "ACL",
+        "selector": ".menuEntries .menuLabel:has-text('ACL')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Admin"
+      }
+    ],
+    "MISCELLANEOUS": [
+      {
+        "name": "Flow",
+        "selector": ".menuLabel.px-1:has-text('Flow')",
+        "depth": 0,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "New/Search",
+        "selector": ".menuEntries .menuLabel:has-text('New/Search')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Patient"
+      },
+      {
+        "name": "Current",
+        "selector": ".menuEntries .menuLabel:has-text('Current')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": true,
+        "parent": "Visits"
+      },
+      {
+        "name": "Facilities",
+        "selector": ".menuEntries .menuLabel:has-text('Facilities')",
+        "depth": 2,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Clinic"
+      },
+      {
+        "name": "Documents",
+        "selector": ".dropdown-toggle:has-text('Documents')",
+        "depth": 1,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": "Admin"
+      },
+      {
+        "name": "Miscellaneous",
+        "selector": ".dropdown-toggle:has-text('Miscellaneous')",
+        "depth": 0,
+        "is_dropdown": true,
+        "disabled": false,
+        "parent": null
+      },
+      {
+        "name": "Dicom Viewer",
+        "selector": ".menuEntries .menuLabel:has-text('Dicom Viewer')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "Authorizations",
+        "selector": ".menuEntries .menuLabel:has-text('Authorizations')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "Chart Tracker",
+        "selector": ".menuEntries .menuLabel:has-text('Chart Tracker')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "Office Notes",
+        "selector": ".menuEntries .menuLabel:has-text('Office Notes')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      },
+      {
+        "name": "New Documents",
+        "selector": ".menuEntries .menuLabel:has-text('New Documents')",
+        "depth": 1,
+        "is_dropdown": false,
+        "disabled": false,
+        "parent": "Miscellaneous"
+      }
+    ]
+  }
+}

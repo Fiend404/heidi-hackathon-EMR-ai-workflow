@@ -1,0 +1,91 @@
+{
+  "operations": [
+    {
+      "name": "add_address_entry",
+      "description": "Add a new entry to the Address Book",
+      "navigation": [
+        "Admin",
+        "Address Book"
+      ],
+      "trigger": {
+        "type": "button",
+        "selector": "input[value='Add New']",
+        "frame": "iframe[src*='addrbook_list']"
+      },
+      "form_frame": "iframe[src*='addrbook_edit']",
+      "form_fields": [
+        "form_abook_type",
+        "form_title",
+        "form_fname",
+        "form_lname",
+        "form_mname",
+        "form_suffix",
+        "form_specialty",
+        "form_organization",
+        "form_phone",
+        "form_phonecell",
+        "form_phonew1",
+        "form_fax",
+        "form_email",
+        "form_email_direct",
+        "form_street",
+        "form_streetb",
+        "form_city",
+        "form_state",
+        "form_zip",
+        "form_notes"
+      ],
+      "required_fields": [],
+      "submit": {
+        "type": "button",
+        "selector": "input[name='form_save']"
+      },
+      "success_indicator": {
+        "type": "frame_url_change",
+        "condition": "url_contains",
+        "value": "addrbook_list"
+      },
+      "error_indicator": {
+        "selector": ".error-message, .alert-danger",
+        "condition": "visible"
+      }
+    },
+    {
+      "name": "list_address_entries",
+      "description": "View list of Address Book entries",
+      "navigation": [
+        "Admin",
+        "Address Book"
+      ],
+      "trigger": null,
+      "form_frame": "iframe[src*='addrbook_list']",
+      "table_selector": "table",
+      "success_indicator": {
+        "type": "element_visible",
+        "selector": "table"
+      }
+    },
+    {
+      "name": "search_address_entries",
+      "description": "Search Address Book by name or type",
+      "navigation": [
+        "Admin",
+        "Address Book"
+      ],
+      "trigger": null,
+      "form_frame": "iframe[src*='addrbook_list']",
+      "form_fields": [
+        "form_search",
+        "form_abook_type"
+      ],
+      "submit": {
+        "type": "button",
+        "selector": "input[value='Search']"
+      },
+      "success_indicator": {
+        "type": "element_visible",
+        "selector": "table"
+      }
+    }
+  ]
+}

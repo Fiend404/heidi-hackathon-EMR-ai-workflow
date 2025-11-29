@@ -1,0 +1,62 @@
+{
+  "source": "sample-profile-data.json",
+  "target": "Address Book (addrbook_edit)",
+  "mappings": [
+    {
+      "source_field": "first_name",
+      "target_field": "form_fname",
+      "transform": null
+    },
+    {
+      "source_field": "last_name",
+      "target_field": "form_lname",
+      "transform": null
+    },
+    {
+      "source_field": "phone",
+      "target_field": "form_phonecell",
+      "transform": "normalize_phone"
+    },
+    {
+      "source_field": "email",
+      "target_field": "form_email",
+      "transform": null
+    },
+    {
+      "source_field": "gender",
+      "target_field": "form_title",
+      "transform": "gender_to_title",
+      "notes": "male -> Mr., female -> Ms."
+    },
+    {
+      "source_field": "additional_context",
+      "target_field": "form_notes",
+      "transform": "combine_medical_info",
+      "source_fields_to_combine": [
+        "additional_context",
+        "current_medications",
+        "allergies",
+        "past_medical_history"
+      ]
+    }
+  ],
+  "default_values": {
+    "form_abook_type": "oth",
+    "form_specialty": "Patient Contact"
+  },
+  "unmapped_source_fields": [
+    "id",
+    "source",
+    "ehr",
+    "ehr_patient_id",
+    "managed_by",
+    "birth_date",
+    "demographic_string",
+    "remember_consent"
+  ],
+  "transforms": {
+    "normalize_phone": "Remove '+61' prefix, format as XXX-XXX-XXXX",
+    "gender_to_title": "male -> 'Mr.', female -> 'Ms.'",
+    "combine_medical_info": "Combine all medical fields into notes with headers"
+  }
+}

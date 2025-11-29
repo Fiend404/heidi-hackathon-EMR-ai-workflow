@@ -1,0 +1,813 @@
+{
+  "page_url": "/interface/usergroup/addrbook_edit.php",
+  "iframe_selector": "iframe[src*='addrbook_edit']",
+  "forms": {
+    "theform": {
+      "action": "addrbook_edit.php?userid=",
+      "method": "post",
+      "fields": [
+        {
+          "name": "form_lname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_lname']"
+        },
+        {
+          "name": "form_fname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_fname']"
+        },
+        {
+          "name": "form_mname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_mname']"
+        },
+        {
+          "name": "form_suffix",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_suffix']"
+        },
+        {
+          "name": "form_specialty",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_specialty']"
+        },
+        {
+          "name": "form_organization",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_organization']"
+        },
+        {
+          "name": "form_cpoe",
+          "id": "form_cpoe",
+          "type": "checkbox",
+          "maxlength": null,
+          "selector": "[name='form_cpoe']"
+        },
+        {
+          "name": "form_director_lname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_director_lname']"
+        },
+        {
+          "name": "form_director_fname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_director_fname']"
+        },
+        {
+          "name": "form_director_mname",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_director_mname']"
+        },
+        {
+          "name": "form_director_suffix",
+          "id": null,
+          "type": "text",
+          "maxlength": "50",
+          "selector": "[name='form_director_suffix']"
+        },
+        {
+          "name": "form_valedictory",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_valedictory']"
+        },
+        {
+          "name": "form_phone",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_phone']"
+        },
+        {
+          "name": "form_phonecell",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_phonecell']"
+        },
+        {
+          "name": "form_phonew1",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_phonew1']"
+        },
+        {
+          "name": "form_phonew2",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_phonew2']"
+        },
+        {
+          "name": "form_fax",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_fax']"
+        },
+        {
+          "name": "form_assistant",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_assistant']"
+        },
+        {
+          "name": "form_email",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_email']"
+        },
+        {
+          "name": "form_email_direct",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_email_direct']"
+        },
+        {
+          "name": "form_url",
+          "id": null,
+          "type": "text",
+          "maxlength": "250",
+          "selector": "[name='form_url']"
+        },
+        {
+          "name": "form_street",
+          "id": null,
+          "type": "text",
+          "maxlength": "60",
+          "selector": "[name='form_street']"
+        },
+        {
+          "name": "form_streetb",
+          "id": null,
+          "type": "text",
+          "maxlength": "60",
+          "selector": "[name='form_streetb']"
+        },
+        {
+          "name": "form_city",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_city']"
+        },
+        {
+          "name": "form_zip",
+          "id": null,
+          "type": "text",
+          "maxlength": "20",
+          "selector": "[name='form_zip']"
+        },
+        {
+          "name": "form_street2",
+          "id": null,
+          "type": "text",
+          "maxlength": "60",
+          "selector": "[name='form_street2']"
+        },
+        {
+          "name": "form_streetb2",
+          "id": null,
+          "type": "text",
+          "maxlength": "60",
+          "selector": "[name='form_streetb2']"
+        },
+        {
+          "name": "form_city2",
+          "id": null,
+          "type": "text",
+          "maxlength": "30",
+          "selector": "[name='form_city2']"
+        },
+        {
+          "name": "form_zip2",
+          "id": null,
+          "type": "text",
+          "maxlength": "20",
+          "selector": "[name='form_zip2']"
+        },
+        {
+          "name": "form_upin",
+          "id": null,
+          "type": "text",
+          "maxlength": "6",
+          "selector": "[name='form_upin']"
+        },
+        {
+          "name": "form_npi",
+          "id": null,
+          "type": "text",
+          "maxlength": "10",
+          "selector": "[name='form_npi']"
+        },
+        {
+          "name": "form_federaltaxid",
+          "id": null,
+          "type": "text",
+          "maxlength": "10",
+          "selector": "[name='form_federaltaxid']"
+        },
+        {
+          "name": "form_taxonomy",
+          "id": null,
+          "type": "text",
+          "maxlength": "10",
+          "selector": "[name='form_taxonomy']"
+        },
+        {
+          "name": "form_abook_type",
+          "id": "form_abook_type",
+          "type": "select",
+          "selector": "[name='form_abook_type']",
+          "options": [
+            {
+              "value": "",
+              "text": "Unassigned"
+            },
+            {
+              "value": "ord_img",
+              "text": "Imaging Service"
+            },
+            {
+              "value": "ord_imm",
+              "text": "Immunization Service"
+            },
+            {
+              "value": "ord_lab",
+              "text": "Lab Service"
+            },
+            {
+              "value": "spe",
+              "text": "Specialist"
+            },
+            {
+              "value": "vendor",
+              "text": "Vendor"
+            },
+            {
+              "value": "dist",
+              "text": "Distributor"
+            },
+            {
+              "value": "ccda",
+              "text": "Care Coordination"
+            },
+            {
+              "value": "oth",
+              "text": "Other"
+            },
+            {
+              "value": "emr_direct",
+              "text": "EMR Direct"
+            },
+            {
+              "value": "external_provider",
+              "text": "External Provider"
+            },
+            {
+              "value": "external_org",
+              "text": "External Organization"
+            },
+            {
+              "value": "bill_svc",
+              "text": "Billing Service"
+            }
+          ]
+        },
+        {
+          "name": "form_title",
+          "id": "form_title",
+          "type": "select",
+          "selector": "[name='form_title']",
+          "options": [
+            {
+              "value": "",
+              "text": ""
+            },
+            {
+              "value": "Mr.",
+              "text": "Mr."
+            },
+            {
+              "value": "Mrs.",
+              "text": "Mrs."
+            },
+            {
+              "value": "Ms.",
+              "text": "Ms."
+            },
+            {
+              "value": "Dr.",
+              "text": "Dr."
+            }
+          ]
+        },
+        {
+          "name": "form_director_title",
+          "id": "form_director_title",
+          "type": "select",
+          "selector": "[name='form_director_title']",
+          "options": [
+            {
+              "value": "",
+              "text": ""
+            },
+            {
+              "value": "Mr.",
+              "text": "Mr."
+            },
+            {
+              "value": "Mrs.",
+              "text": "Mrs."
+            },
+            {
+              "value": "Ms.",
+              "text": "Ms."
+            },
+            {
+              "value": "Dr.",
+              "text": "Dr."
+            }
+          ]
+        },
+        {
+          "name": "form_state",
+          "id": "form_state",
+          "type": "select",
+          "selector": "[name='form_state']",
+          "options": [
+            {
+              "value": "",
+              "text": "Unassigned"
+            },
+            {
+              "value": "AL",
+              "text": "Alabama"
+            },
+            {
+              "value": "AK",
+              "text": "Alaska"
+            },
+            {
+              "value": "AZ",
+              "text": "Arizona"
+            },
+            {
+              "value": "AR",
+              "text": "Arkansas"
+            },
+            {
+              "value": "CA",
+              "text": "California"
+            },
+            {
+              "value": "CO",
+              "text": "Colorado"
+            },
+            {
+              "value": "CT",
+              "text": "Connecticut"
+            },
+            {
+              "value": "DE",
+              "text": "Delaware"
+            },
+            {
+              "value": "DC",
+              "text": "District of Columbia"
+            },
+            {
+              "value": "FL",
+              "text": "Florida"
+            },
+            {
+              "value": "GA",
+              "text": "Georgia"
+            },
+            {
+              "value": "HI",
+              "text": "Hawaii"
+            },
+            {
+              "value": "ID",
+              "text": "Idaho"
+            },
+            {
+              "value": "IL",
+              "text": "Illinois"
+            },
+            {
+              "value": "IN",
+              "text": "Indiana"
+            },
+            {
+              "value": "IA",
+              "text": "Iowa"
+            },
+            {
+              "value": "KS",
+              "text": "Kansas"
+            },
+            {
+              "value": "KY",
+              "text": "Kentucky"
+            },
+            {
+              "value": "LA",
+              "text": "Louisiana"
+            },
+            {
+              "value": "ME",
+              "text": "Maine"
+            },
+            {
+              "value": "MD",
+              "text": "Maryland"
+            },
+            {
+              "value": "MA",
+              "text": "Massachusetts"
+            },
+            {
+              "value": "MI",
+              "text": "Michigan"
+            },
+            {
+              "value": "MN",
+              "text": "Minnesota"
+            },
+            {
+              "value": "MS",
+              "text": "Mississippi"
+            },
+            {
+              "value": "MO",
+              "text": "Missouri"
+            },
+            {
+              "value": "MT",
+              "text": "Montana"
+            },
+            {
+              "value": "NE",
+              "text": "Nebraska"
+            },
+            {
+              "value": "NV",
+              "text": "Nevada"
+            },
+            {
+              "value": "NH",
+              "text": "New Hampshire"
+            },
+            {
+              "value": "NJ",
+              "text": "New Jersey"
+            },
+            {
+              "value": "NM",
+              "text": "New Mexico"
+            },
+            {
+              "value": "NY",
+              "text": "New York"
+            },
+            {
+              "value": "NC",
+              "text": "North Carolina"
+            },
+            {
+              "value": "ND",
+              "text": "North Dakota"
+            },
+            {
+              "value": "OH",
+              "text": "Ohio"
+            },
+            {
+              "value": "OK",
+              "text": "Oklahoma"
+            },
+            {
+              "value": "OR",
+              "text": "Oregon"
+            },
+            {
+              "value": "PA",
+              "text": "Pennsylvania"
+            },
+            {
+              "value": "PR",
+              "text": "Puerto Rico"
+            },
+            {
+              "value": "RI",
+              "text": "Rhode Island"
+            },
+            {
+              "value": "SC",
+              "text": "South Carolina"
+            },
+            {
+              "value": "SD",
+              "text": "South Dakota"
+            },
+            {
+              "value": "TN",
+              "text": "Tennessee"
+            },
+            {
+              "value": "TX",
+              "text": "Texas"
+            },
+            {
+              "value": "UT",
+              "text": "Utah"
+            },
+            {
+              "value": "VT",
+              "text": "Vermont"
+            },
+            {
+              "value": "VA",
+              "text": "Virginia"
+            },
+            {
+              "value": "WA",
+              "text": "Washington"
+            },
+            {
+              "value": "WV",
+              "text": "West Virginia"
+            },
+            {
+              "value": "WI",
+              "text": "Wisconsin"
+            },
+            {
+              "value": "WY",
+              "text": "Wyoming"
+            }
+          ]
+        },
+        {
+          "name": "form_state2",
+          "id": "form_state2",
+          "type": "select",
+          "selector": "[name='form_state2']",
+          "options": [
+            {
+              "value": "",
+              "text": "Unassigned"
+            },
+            {
+              "value": "AL",
+              "text": "Alabama"
+            },
+            {
+              "value": "AK",
+              "text": "Alaska"
+            },
+            {
+              "value": "AZ",
+              "text": "Arizona"
+            },
+            {
+              "value": "AR",
+              "text": "Arkansas"
+            },
+            {
+              "value": "CA",
+              "text": "California"
+            },
+            {
+              "value": "CO",
+              "text": "Colorado"
+            },
+            {
+              "value": "CT",
+              "text": "Connecticut"
+            },
+            {
+              "value": "DE",
+              "text": "Delaware"
+            },
+            {
+              "value": "DC",
+              "text": "District of Columbia"
+            },
+            {
+              "value": "FL",
+              "text": "Florida"
+            },
+            {
+              "value": "GA",
+              "text": "Georgia"
+            },
+            {
+              "value": "HI",
+              "text": "Hawaii"
+            },
+            {
+              "value": "ID",
+              "text": "Idaho"
+            },
+            {
+              "value": "IL",
+              "text": "Illinois"
+            },
+            {
+              "value": "IN",
+              "text": "Indiana"
+            },
+            {
+              "value": "IA",
+              "text": "Iowa"
+            },
+            {
+              "value": "KS",
+              "text": "Kansas"
+            },
+            {
+              "value": "KY",
+              "text": "Kentucky"
+            },
+            {
+              "value": "LA",
+              "text": "Louisiana"
+            },
+            {
+              "value": "ME",
+              "text": "Maine"
+            },
+            {
+              "value": "MD",
+              "text": "Maryland"
+            },
+            {
+              "value": "MA",
+              "text": "Massachusetts"
+            },
+            {
+              "value": "MI",
+              "text": "Michigan"
+            },
+            {
+              "value": "MN",
+              "text": "Minnesota"
+            },
+            {
+              "value": "MS",
+              "text": "Mississippi"
+            },
+            {
+              "value": "MO",
+              "text": "Missouri"
+            },
+            {
+              "value": "MT",
+              "text": "Montana"
+            },
+            {
+              "value": "NE",
+              "text": "Nebraska"
+            },
+            {
+              "value": "NV",
+              "text": "Nevada"
+            },
+            {
+              "value": "NH",
+              "text": "New Hampshire"
+            },
+            {
+              "value": "NJ",
+              "text": "New Jersey"
+            },
+            {
+              "value": "NM",
+              "text": "New Mexico"
+            },
+            {
+              "value": "NY",
+              "text": "New York"
+            },
+            {
+              "value": "NC",
+              "text": "North Carolina"
+            },
+            {
+              "value": "ND",
+              "text": "North Dakota"
+            },
+            {
+              "value": "OH",
+              "text": "Ohio"
+            },
+            {
+              "value": "OK",
+              "text": "Oklahoma"
+            },
+            {
+              "value": "OR",
+              "text": "Oregon"
+            },
+            {
+              "value": "PA",
+              "text": "Pennsylvania"
+            },
+            {
+              "value": "PR",
+              "text": "Puerto Rico"
+            },
+            {
+              "value": "RI",
+              "text": "Rhode Island"
+            },
+            {
+              "value": "SC",
+              "text": "South Carolina"
+            },
+            {
+              "value": "SD",
+              "text": "South Dakota"
+            },
+            {
+              "value": "TN",
+              "text": "Tennessee"
+            },
+            {
+              "value": "TX",
+              "text": "Texas"
+            },
+            {
+              "value": "UT",
+              "text": "Utah"
+            },
+            {
+              "value": "VT",
+              "text": "Vermont"
+            },
+            {
+              "value": "VA",
+              "text": "Virginia"
+            },
+            {
+              "value": "WA",
+              "text": "Washington"
+            },
+            {
+              "value": "WV",
+              "text": "West Virginia"
+            },
+            {
+              "value": "WI",
+              "text": "Wisconsin"
+            },
+            {
+              "value": "WY",
+              "text": "Wyoming"
+            }
+          ]
+        },
+        {
+          "name": "form_notes",
+          "id": null,
+          "type": "textarea",
+          "selector": "[name='form_notes']"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Save",
+          "type": "submit",
+          "name": "form_save",
+          "selector": "input[name='form_save']"
+        }
+      ]
+    }
+  }
+}

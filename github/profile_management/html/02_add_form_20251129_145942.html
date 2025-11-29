@@ -1,0 +1,1797 @@
+<!DOCTYPE html><html><head>
+<title>OpenEMR</title>
+
+<script>
+    // This is to prevent users from losing data by refreshing or backing out of OpenEMR.
+    //  (default behavior, however, this behavior can be turned off in the prevent_browser_refresh global)
+            window.addEventListener('beforeunload', (event) => {
+            if (!timed_out) {
+                event.returnValue = "Recommend not leaving or refreshing or you may lose data.";
+            }
+        });
+    
+    // login.php makes sure the session ID captured here is different for each
+// new login.  We maintain it here because most browsers do not have separate
+// cookie storage for different top-level windows.  This function should be
+// called just prior to invoking any server script that requires correct
+// session data.  onclick="top.restoreSession()" usually does the job.
+//
+var oemr_session_name = "OpenEMR";
+var oemr_session_id   = "05bFB1KD7P0K0oP-7oJ75hUdtaj91sJEYHfkPo8T6tWFpqJB";
+var oemr_dialog_close_msg = "OK to close this other popup window?";
+
+var oemr_scp_lifetime = 0;
+var oemr_scp_path = "\/openemr\/";
+var oemr_scp_domain = "";
+var oemr_scp_secure = false;
+var oemr_scp_samesite = "Strict";
+var oemr_cookie = '';
+var oemr_change_count = 0; // debugging
+
+function restoreSession() {
+            var ca = document.cookie.split('; ');
+        for (var i = 0; i < ca.length; ++i) {
+            var c = ca[i].split('=');
+            if (c[0] == oemr_session_name && c[1] != oemr_session_id) {
+                                // It's important that the cookie parameters duplicate what PHP assigned.
+                oemr_cookie = oemr_session_name + '=' + oemr_session_id +
+                    '; path=' + oemr_scp_path +
+                    '; domain=' + oemr_scp_domain;
+                if (oemr_scp_lifetime) {
+                    var d = new Date();
+                    d.setTime(d.getTime() + (oemr_scp_lifetime * 1000));
+                    oemr_cookie += '; expires=' + d.toUTCString();
+                }
+                if (oemr_scp_samesite) {
+                    oemr_cookie += '; SameSite=' + oemr_scp_samesite;
+                }
+                document.cookie = oemr_cookie;
+                ++oemr_change_count; // debugging
+            }
+        }
+        return true;
+}
+
+// Debugging support. Call this from an onclick handler somewhere for some
+// insight into the state of the PHP session cookie.
+//
+function restoreSessionInfo() {
+    alert(
+        'session_id = ' + oemr_session_id   + '\n' +
+        'cookie = '     + document.cookie   + '\n' +
+        'lifetime = '   + oemr_scp_lifetime + '\n' +
+        'path = '       + oemr_scp_path     + '\n' +
+        'domain = '     + oemr_scp_domain   + '\n' +
+        'secure = '     + oemr_scp_secure   + '\n' +
+        'samesite = '   + oemr_scp_samesite + '\n' +
+        'count = '      + oemr_change_count
+    );
+}
+
+// Pages that have a Print button or link should call this to initialize it for logging.
+// This is done at page load time in case we want to hide or disable the element.
+// The second argument, if present, specifies a log message to be used instead of logging
+// the entire document and will always prevent hiding of the button or link.
+//
+function printLogSetup(elem, logdata) {
+ if (elem == null) return;
+ var doc = elem.ownerDocument;
+ var win = doc.defaultView || doc.parentWindow;
+ if (typeof(logdata) == 'undefined') logdata = null;
+ win.printlogdata = logdata;
+ elem.onclick = function () {
+  // This is a function definition and variables here will be evaluated when the function executes.
+  top.printLogPrint(this);
+ }
+}
+
+// Pages that would otherwise call window.print() at load time should call this instead
+// to support print logging. In this case the passed argument is normally the window,
+// and data to log, if specified, should be in the caller's window.printlogdata.
+// If no log data is specified and the global option to hide the print feature is set,
+// then no printing is done and the function returns false.
+//
+function printLogPrint(elem) {
+ var win = elem;
+ if (elem.ownerDocument) {
+  var doc = elem.ownerDocument;
+  win = doc.defaultView || doc.parentWindow;
+ }
+ if (win.printlog_before_print) win.printlog_before_print();
+ win.print();
+ return true;
+}
+
+    // Since this should be the parent window, this is to prevent calls to the
+    // window that opened this window. For example when a new window is opened
+    // from the Patient Flow Board or the Patient Finder.
+    window.opener = null;
+    window.name = "main";
+
+    // This flag indicates if another window or frame is trying to reload the login
+    // page to this top-level window.  It is set by javascript returned by auth.inc.php
+    // and is checked by handlers of beforeunload events.
+    var timed_out = false;
+    // some globals to access using top.variable
+    // note that 'let' or 'const' does not allow global scope here.
+    // only use var
+    var isPortalEnabled = "1";
+    // Set the csrf_token_js token that is used in the below js/tabs_view_model.js script
+    var csrf_token_js = "58bc407d51bbd0b5cf282dd3680e00f296e68306";
+    var userDebug = "0";
+    var webroot_url = "\/openemr";
+    var jsLanguageDirection = "ltr" || 'ltr';
+    var jsGlobals = {};
+    // used in tabs_view_model.js.
+    jsGlobals.enable_group_therapy = "0";
+    jsGlobals.languageDirection = jsLanguageDirection;
+    jsGlobals.date_display_format = "0";
+    jsGlobals.time_display_format = "0";
+    jsGlobals.timezone = "";
+    jsGlobals.assetVersion = 78;
+    var WindowTitleAddPatient = false;
+    var WindowTitleBase = "OpenEMR";
+    const isSms = "";
+    const isFax = "";
+    const isServicesOther = (isSms || isFax);
+    var telemetryEnabled = 1;
+
+    /**
+     * Async function to get session value from the server
+     * Usage Example
+     * let authUser;
+     * let sessionPid = await top.getSessionValue('pid');
+     * // If using then() method a promise is returned instead of the value.
+     * await top.getSessionValue('authUser').then(function (auth) {
+     *    authUser = auth;
+     *    console.log('authUser', authUser);
+     * });
+     * console.log('session pid', sessionPid);
+     * console.log('auth User', authUser);
+    */
+    async function getSessionValue(key) {
+        restoreSession();
+        let csrf_token_js = "58bc407d51bbd0b5cf282dd3680e00f296e68306";
+        const config = {
+            url: `${webroot_url}/library/ajax/set_pt.php?csrf_token_form=${csrf_token_js}`,
+            method: 'POST',
+            data: {
+                mode: 'session_key',
+                key: key
+            }
+        };
+        try {
+            const response = await $.ajax(config);
+            restoreSession();
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    function goRepeaterServices() {
+        // Ensure send the skip_timeout_reset parameter to not count this as a manual entry in the
+        // timing out mechanism in OpenEMR.
+
+        // Send the skip_timeout_reset parameter to not count this as a manual entry in the
+        // timing out mechanism in OpenEMR. Notify App for various portal and reminder alerts.
+        // Combined portal and reminders ajax to fetch sjp 06-07-2020.
+        // Incorporated timeout mechanism in 2021
+        restoreSession();
+        let request = new FormData;
+        request.append("skip_timeout_reset", "1");
+        request.append("isPortal", isPortalEnabled);
+        request.append("isServicesOther", isServicesOther);
+        request.append("isSms", isSms);
+        request.append("isFax", isFax);
+        request.append("csrf_token_form", csrf_token_js);
+        fetch(webroot_url + "/library/ajax/dated_reminders_counter.php", {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: request
+        }).then((response) => {
+            if (response.status !== 200) {
+                console.log('Reminders start failed. Status Code: ' + response.status);
+                return;
+            }
+            return response.json();
+        }).then((data) => {
+            if (data.timeoutMessage && (data.timeoutMessage == 'timeout')) {
+                // timeout has happened, so logout
+                timeoutLogout();
+            }
+            if (isPortalEnabled) {
+                let mail = data.mailCnt;
+                let chats = data.chatCnt;
+                let audits = data.auditCnt;
+                let payments = data.paymentCnt;
+                let total = data.total;
+                let enable = ((1 * mail) + (1 * audits)); // payments are among audits.
+                // Send portal counts to notification button model
+                // Will turn off button display if no notification!
+                app_view_model.application_data.user().portal(enable);
+                if (enable > 0) {
+                    app_view_model.application_data.user().portalAlerts(total);
+                    app_view_model.application_data.user().portalAudits(audits);
+                    app_view_model.application_data.user().portalMail(mail);
+                    app_view_model.application_data.user().portalChats(chats);
+                    app_view_model.application_data.user().portalPayments(payments);
+                }
+            }
+            if (isServicesOther) {
+                let sms = data.smsCnt;
+                let fax = data.faxCnt;
+                let total = data.serviceTotal;
+                let enable = ((1 * sms) + (1 * fax));
+                // Will turn off button display if no notification!
+                app_view_model.application_data.user().servicesOther(enable);
+                if (enable > 0) {
+                    app_view_model.application_data.user().serviceAlerts(total);
+                    app_view_model.application_data.user().smsAlerts(sms);
+                    app_view_model.application_data.user().faxAlerts(fax);
+                }
+            }
+            // Always send reminder count text to model
+            app_view_model.application_data.user().messages(data.reminderText);
+        }).catch(function (error) {
+            console.log('Request failed', error);
+        });
+
+        // run background-services
+        // delay 10 seconds to prevent both utility trigger at close to same time.
+        // Both call globals so that is my concern.
+        setTimeout(function () {
+            restoreSession();
+            request = new FormData;
+            request.append("skip_timeout_reset", "1");
+            request.append("ajax", "1");
+            request.append("csrf_token_form", csrf_token_js);
+            fetch(webroot_url + "/library/ajax/execute_background_services.php", {
+                method: 'POST',
+                credentials: 'same-origin',
+                body: request
+            }).then((response) => {
+                if (response.status !== 200) {
+                    console.log('Background Service start failed. Status Code: ' + response.status);
+                }
+            }).catch(function (error) {
+                console.log('HTML Background Service start Request failed: ', error);
+            });
+        }, 10000);
+
+        // auto run this function every 60 seconds
+        var repeater = setTimeout("goRepeaterServices()", 60000);
+    }
+
+    function isEncounterLocked(encounterId) {
+                // If encounter locking isn't enabled then always return false
+        return false;
+            }
+</script>
+
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="shortcut icon" href="/openemr/public/images/logos/core/favicon/favicon.ico?t=1764316914">
+
+<link rel="stylesheet" href="/openemr/public/themes/style_light.css?v=78">
+<link rel="stylesheet" href="/openemr/public/themes/tabs_style_full.css?v=78">
+
+<script src="/openemr/public/assets/jquery/dist/jquery.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/bootstrap/dist/js/bootstrap.bundle.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/i18next/dist/umd/i18next.min.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/js/xl/formatting.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/js/utility.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/knockout/build/output/knockout-latest.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/textformat.js?v=78" type="text/javascript"></script>
+<script src="/openemr/library/dialog.js?v=78" type="text/javascript"></script>
+<script src="/openemr/public/assets/hotkeys-js/dist/hotkeys.min.js?v=78" type="text/javascript"></script>
+
+<script>
+    // set up global translations for js
+    function setupI18n(lang_id) {
+        restoreSession();
+        return fetch("\/openemr" +"/library/ajax/i18n_generator.php?lang_id=" + encodeURIComponent(lang_id) + "&csrf_token_form=" + encodeURIComponent(csrf_token_js), {
+            credentials: 'same-origin',
+            method: 'GET'
+        }).then((response) => {
+            if (response.status !== 200) {
+                console.log('I18n setup failed. Status Code: ' + response.status);
+                return [];
+            }
+            return response.json();
+        })
+    }
+    setupI18n("1").then(translationsJson => {
+        i18next.init({
+            lng: 'selected',
+            debug: false,
+            nsSeparator: false,
+            keySeparator: false,
+            resources: {
+                selected: {
+                    translation: translationsJson
+                }
+            }
+        });
+    }).catch(error => {
+        console.log(error.message);
+    });
+
+    /**
+     * Assign and persist documents to portal patients
+     * @var int patientId pid
+     */
+    function assignPatientDocuments(patientId) {
+        let url = top.webroot_url + '/portal/import_template_ui.php?from_demo_pid=' + encodeURIComponent(patientId);
+        dlgopen(url, 'pop-assignments', 'modal-lg', 850, '', '', {
+            allowDrag: true,
+            allowResize: true,
+            sizeHeight: 'full',
+        });
+    }
+</script>
+
+<script src="js/custom_bindings.js?v=78"></script>
+<script src="js/user_data_view_model.js?v=78"></script>
+<script src="js/patient_data_view_model.js?v=78"></script>
+<script src="js/therapy_group_data_view_model.js?v=78"></script>
+<script src="js/tabs_view_model.js?v=78"></script>
+<script src="js/application_view_model.js?v=78"></script>
+<script src="js/frame_proxies.js?v=78"></script>
+<script src="js/dialog_utils.js?v=78"></script>
+<script src="js/shortcuts.js?v=78"></script>
+
+<script type="text/html" id="tabs-controls">
+    <div class="tabControls" data-bind="with: tabs">
+        <div class="tabsNoHover w-1">
+            <i class="fa fa-caret-up menu_arrow" id="patient_caret" title="Toggle the Patient Panel" aria-hidden="true"></i>
+        </div>
+        <!-- ko  foreach: tabsList -->
+        <div class="tabSpan bgcolor2" data-bind="click: tabClicked, css: {tabsNoHover: !visible()}">
+            <span class="tabTitle pr-2" data-bind="text: title, click: tabClicked, css: {tabHidden: !visible()}"></span>
+            <span class="fa fa-fw fa-xs mr-1 fa-sync" data-bind="click: tabRefresh, class: spinner"></span>
+            <!--ko if:!locked() -->
+            <span class="fa fa-fw fa-xs mr-1 fa-unlock" data-bind="click: tabLockToggle"></span>
+            <!-- /ko -->
+            <!--ko if:locked() -->
+            <span class="fa fa-fw fa-xs mr-1 fa-lock" data-bind="click: tabLockToggle"></span>
+            <!-- /ko -->
+            <!-- ko if:closable-->
+            <span class="fa fa-fw fa-xs fa-times" data-bind="click: tabClose"></span>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+        <div class="tabsNoHover w-100"></div>
+    </div>
+</script>
+<script type="text/html" id="tabs-frames">
+
+    <!-- ko  foreach: tabs.tabsList -->
+    <div class="frameDisplay" data-bind="visible:visible">
+        <h5 class="text-center position-relative" style="top: 50%;" data-bind="text: loading_text,visible:loading_text_status"></h5>
+        <iframe data-bind="location: $data, iframeName: $data.name, ">
+
+        </iframe>
+    </div>
+    <!-- /ko -->
+</script>
+
+<script type="text/html" id="menu-action">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class='menuLabel px-1' data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}"></div>
+</script>
+<script type="text/html" id="menu-header">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class='menuLabel px-1 dropdown-toggle oe-dropdown-toggle' data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }"></li>
+        </ul>
+    </div>
+</script>
+<script type="text/html" id="menu-template">
+    <div class='appMenu navbar-nav mr-auto' data-bind="foreach: menu">
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }"></div>
+    </div>
+</script>
+<script type="text/html" id="patient-data-template">
+    <div class="d-lg-inline-flex w-100">
+        <div class="flex-fill">
+            <div class="float-left mx-2">
+                <!-- ko if: patient -->
+                <div data-bind="with: patient" class="patientPicture">
+                    <img data-bind="attr: {src: patient_picture}"
+                        class="img-thumbnail"
+                        width="75"
+                        height="75"
+                        onError="this.src = '/openemr/public/images/patient-picture-default.png'" />
+                </div>
+                <!-- /ko -->
+            </div>
+            <div class="form-group">
+                <!-- ko if: patient -->
+                <h3 class="d-inline">                    <a class="ptName  " data-bind="click:refreshPatient,with: patient" href="#" title="To Dashboard">
+                        <span data-bind="text: pname()"></span>
+                        <small class="text-muted">(<span data-bind="text: pubpid"></span>)</small>
+                    </a>
+                    <small class="">                    <a href="#" class="pt-1  text-muted" data-bind="click:clearPatient" title="Close Patient Chart">
+                        <i class="fa fa-times text-muted fa-xs"></i>
+                    </a>
+                    </small>                </h3>
+                <div class="mt-2">
+                    <span data-bind="text:patient().str_dob()"></span>
+                </div>
+                <!-- /ko -->
+            </div>
+        </div>
+
+        <div class="flex-fill ml-2">
+            <!-- ko if: patient -->
+            <!-- ko with: patient -->
+            <div class="btn-group btn-group-sm">
+                <a class="btn btn-sm btn-secondary" data-bind="click: clickEncounterList" href="#"
+                    title="Visit History">
+                    <i class="fas fa-history"></i>
+                </a>
+                <div class="btn-group dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle"
+                    type="button" id="pastEncounters"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true">
+                    Select Encounter&nbsp;
+                    (<span data-bind="text:encounterArray().length"></span>)<span class="caret"></span></button>
+                <ul class="dropdown-menu" aria-labelledby="pastEncounters">
+                    <!-- ko foreach:encounterArray -->
+                    <li class="d-inline-flex">
+                        <a class="dropdown-item" href="#" data-bind="click:chooseEncounterEvent">
+                            <span data-bind="text:date"></span>
+                            <span data-bind="text:category"></span>
+                        </a>
+                        <a href="#" class="dropdown-item" data-bind="click:reviewEncounterEvent">
+                            <i class="fa fa-rotate-left"></i>&nbsp;Review                        </a>
+                    </li>
+                    <!-- /ko -->
+                </ul>
+            </div>
+                <a class="btn btn-sm btn-secondary" data-bind="click: clickNewEncounter" href="#"
+                    title="New Encounter">
+                    <i class="fa fa-plus"></i>
+                </a>
+            </div>
+
+            <!-- ko if: encounterArray().length > 0 -->
+            <div class="patientCurrentEncounter mt-2 d-block">
+                    <span>Open Encounter:</span>
+                    <!-- ko if:selectedEncounter() -->
+                    <a data-bind="click: refreshEncounter" href="#">
+                        <span data-bind="text:selectedEncounter().date()"></span>
+                        (<span data-bind="text:selectedEncounter().id()"></span>)
+                    </a>
+                    <!-- /ko -->
+                    <!-- ko if:!selectedEncounter() -->
+                    None                    <!-- /ko -->
+                </div>
+
+            <!-- /ko --><!-- encounter -->
+            <!-- /ko --><!-- with patient -->
+            <!-- /ko --><!-- patient -->
+        </div>
+
+        <div class="flex-column mx-2">
+            <!-- ko if: user -->
+            <!-- ko with: user -->
+            <!-- ko if:messages() -->
+            <span class="mr-auto">
+                <a class="btn btn-secondary btn-sm" href="#" data-bind="click: viewMessages"
+                    title="View Messages">
+                    <i class="fa fa-envelope"></i>&nbsp;<span class="badge badge-primary" style="display:inline" data-bind="text: messages()"></span>
+                </a>
+            </span>
+            <!-- /ko --><!-- messages -->
+            <!-- ko if: portal() -->
+            <nav class="btn-group dropdown mr-auto">
+                <button class="btn btn-secondary btn-sm dropdown-toggle"
+                    type="button" id="portalMsgAlerts"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true">
+                    Portal&nbsp;
+                    <span class="badge badge-danger" data-bind="text: portalAlerts()"></span>
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="portalMsgAlerts">
+                    <li>
+                        <a class="dropdown-item" href="#" data-bind="click: viewPortalMail">
+                            <i class="fa fa-envelope"></i>&nbsp;Portal Mail&nbsp;
+                            <span class="badge badge-success" style="display:inline" data-bind="text: portalMail()"></span>
+                        </a>
+                    </li>
+                    <li class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bind="click: viewPortalAudits">
+                            <i class="fa fa-align-justify"></i>&nbsp;Portal Audits&nbsp;
+                            <span class="badge badge-success" style="display:inline" data-bind="text: portalAudits()"></span>
+                        </a>
+                    </li>
+                    <li class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bind="click: viewPortalPayments">
+                            <i class="fa fa-credit-card"></i>&nbsp;Portal Payments&nbsp;<span class="badge badge-success" style="display:inline" data-bind="text: portalPayments()"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- /ko --><!-- portal alert -->
+            <!-- ko if: servicesOther() -->
+            <nav class="btn-group dropdown mr-auto">
+                <button class="btn btn-secondary btn-sm dropdown-toggle"
+                    type="button" id="servicesMsgAlerts"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true">
+                    Services&nbsp;
+                    <span class="badge badge-danger" data-bind="text: serviceAlerts()"></span>
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="servicesMsgAlerts">
+                    <li>
+                        <a class="dropdown-item" href="#" data-bind="click: viewFaxCount">
+                            <i class="fa fa-solid fa-fax"></i>&nbsp;Pending Faxes&nbsp;
+                            <span class="badge badge-success" style="display:inline" data-bind="text: faxAlerts()"></span>
+                        </a>
+                    </li>
+                    <li class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bind="click: viewSmsCount">
+                            <i class="fa fa-sms"></i>&nbsp;Pending SMS&nbsp;
+                            <span class="badge badge-success" style="display:inline" data-bind="text: smsAlerts()"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- /ko --><!-- servicesOther alert -->
+            <!-- /ko --><!-- with user -->
+            <!-- /ko --><!-- user -->
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="therapy-group-template">
+    <div>
+        <span class="patientDataColumn">
+            <span class="float-left"><a data-bind="click: viewTgFinder" href="#" class="btn btn-secondary btn-sm">
+                <i class="fa fa-search" aria-hidden="true"></i>
+            </a></span>
+            <div class="patientInfo">
+                Group:
+                <!-- ko if: therapy_group -->
+                    <a class="ptName" data-bind="click:refreshGroup,with: therapy_group" href="#">
+                        <span data-bind="text: gname()"></span>
+                        (<span data-bind="text: gid"></span>)
+                    </a>
+                <!-- /ko -->
+                <!-- ko ifnot: therapy_group -->
+                None
+                <!-- /ko -->
+                <!-- ko if: therapy_group -->
+                    <a class="btn btn-sm btn-link" href="#" data-bind="click:clearTherapyGroup" title="Clear">
+                        <i class="fa fa-times"></i>
+                </a>
+                <!-- /ko -->
+            </div>
+        </span>
+        <span class="patientDataColumn">
+        <!-- ko if: therapy_group -->
+            <!-- ko with: therapy_group -->
+            <a class="btn btn-sm btn-link" data-bind="click: clickNewGroupEncounter" href="#" title="New Encounter">
+                <i class="fa fa-plus"></i>
+            </a>
+            <div class="patientCurrentEncounter">
+                <span>Open Encounter:</span>
+                <!-- ko if:selectedEncounter() -->
+                    <a data-bind="click: refreshEncounter" href="#">
+                        <span data-bind="text:selectedEncounter().date()"></span>
+                        (<span data-bind="text:selectedEncounter().id()"></span>)
+                    </a>
+                <!-- /ko -->
+                <!-- ko if:!selectedEncounter() -->
+                None
+                <!-- /ko -->
+            </div>
+            <!-- ko if: encounterArray().length > 0 -->
+            <br />
+            <div class="btn-group dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="pastEncounters" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    View Past Encounters&nbsp;
+                    (<span data-bind="text:encounterArray().length"></span>)
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="pastEncounters">
+                    <!-- ko foreach:encounterArray -->
+                    <li class="d-inline-flex">
+                        <a href="#" data-bind="click:chooseEncounterEvent">
+                            <span data-bind="text:date"></span>
+                            <span data-bind="text:category"></span>
+                        </a>
+                        <a href="#" data-bind="click:reviewEncounterEvent">
+                            <i class="fa fa-rotate-left"></i>&nbsp;Review
+                        </a>
+                    </li>
+                    <!-- /ko -->
+                </ul>
+            </div>
+            <!-- /ko -->
+            <!-- /ko -->
+            <!-- /ko -->
+        </span>
+        <!-- ko if: user -->
+        <!-- ko with: user -->
+        <!-- ko if:messages() -->
+        <span class="messagesColumn">
+                <a class="btn btn-secondary" href="#" data-bind="click: viewMessages" title="View Messages">
+                    <i class="fa fa-envelope"></i>&nbsp;<span class="d-inline" data-bind="text: messages()"></span>
+            </a>
+            </span>
+        <!-- /ko -->
+        <!-- /ko -->
+        <!-- /ko -->
+    </div>
+</script>
+
+<script type="text/html" id="user-data-template">
+    <!-- ko with: user -->
+    <div id="username" class="appMenu ml-3">
+        <div class='menuLabel dropdown' id="username" title="Current user" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="fa-stack">
+                        <i class="far text-muted fa-circle fa-2x fa-stack-2x"></i>
+                        <i class="fa text-muted fa-user fa-lg fa-stack-1x" aria-hidden="true" id="user_icon"></i>
+                    </span>
+            <ul id="userdropdown" class="userfunctions menuEntries dropdown-menu dropdown-menu-right menu-shadow-ovr rounded-0 border-0">
+                <li class="menuLabel">
+                    <span class="font-weight-bold"><span data-bind="text:fname"></span> <span data-bind="text:lname"></span></span>
+                </li>
+                <li class="menuLabel" data-bind="click: editSettings"><i class="fa fa-fw pr-2 text-muted fa-cog"></i>&nbspSettings</li>
+                <li class="menuLabel" data-bind="click: changePassword"><i class="fa fa-fw pr-2 text-muted fa-lock"></i>&nbsp;Change Password</li>
+                <li class="menuLabel" data-bind="click: changeMFA"><i class="fa fa-fw pr-2 text-muted fa-key"></i>&nbsp;MFA Management</li>
+                <div class="dropdown-divider"></div>
+                <li class="menuLabel" data-bind="click: function() {navigateTab('./../about_page.php', 'About', function() {activateTabByName('About',true);});}"><i class="fa fa-fw pr-2 text-muted fa-info"></i>&nbsp;About OpenEMR</li>
+                <div class="dropdown-divider"></div>
+                <li class="menuLabel" data-bind="click: logout"><i class="fa fa-fw pr-2 text-muted fa-sign-out-alt"></i>&nbsp;Logout</li>
+            </ul>
+        </div>
+    </div>
+    <!-- /ko -->
+</script>
+<!--?php
+
+
+
+?-->
+<script>
+
+    function menu_entry(object)
+    {
+        var self=this;
+        self.label=ko.observable(object.label);
+
+        self.header=false;
+        if('url' in object )
+        {
+            self.url=ko.observable(object.url);
+            self.header=false;
+        }
+        else
+        {
+            self.header=true;
+        }
+        if('target' in object)
+        {
+            self.target=object.target;
+        }
+        self.requirement=object.requirement;
+
+        if('icon' in object)
+        {
+            self.icon=object.icon;
+        }
+        self.icon=object.icon;
+
+        if('helperText' in object)
+        {
+            self.helperText=object.helperText;
+        }
+        self.helperText=object.helperText;
+
+        if(object.requirement===0)
+        {
+            self.enabled=ko.observable(true);
+        } else if(object.requirement===1)
+        {
+            self.enabled=ko.computed(function()
+            {
+                return app_view_model.application_data.patient()!==null;
+            });
+        } else if((object.requirement===2) || (object.requirement===3))
+        {
+            self.enabled=ko.computed(function()
+            {
+                return (app_view_model.application_data.patient()!==null
+                    && app_view_model.application_data.patient().selectedEncounter()!=null);
+            });
+
+        }
+        else if(object.requirement===4)
+        {
+            self.enabled=ko.computed(function()
+            {
+                return app_view_model.application_data.therapy_group()!==null;
+            });
+        }
+        else if(object.requirement===5)
+        {
+            self.enabled=ko.computed(function()
+            {
+                return (app_view_model.application_data.therapy_group()!==null
+                    && app_view_model.application_data.therapy_group().selectedEncounter()!=null);
+            });
+        }
+        if(self.header)
+        {
+            self.children=ko.observableArray();
+            for(var childIdx=0;childIdx<object.children.length;childIdx++)
+            {
+                var childObj=new menu_entry(object.children[childIdx]);
+                self.children.push(childObj);
+            }
+        }
+        return this;
+    }
+    function process_menu_object(object,target)
+    {
+        var newEntry=new menu_entry(object);
+        target.push(newEntry);
+    }
+    var menu_objects=[{"label":"Calendar","menu_id":"cal0","target":"cal","url":"\/interface\/main\/main_info.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req_strict":["!disable_calendar","!ippf_specific"]},{"label":"Finder","menu_id":"fin0","target":"fin","url":"\/interface\/main\/finder\/dynamic_finder.php","children":[],"requirement":0,"acl_req":["patients","demo"]},{"label":"Flow","menu_id":"pfb0","target":"flb","url":"\/interface\/patient_tracker\/patient_tracker.php?skip_timeout_reset=1","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req_strict":["!disable_pat_trkr","!disable_calendar"]},{"label":"Recalls","menu_id":"pfb0","target":"rcb","url":"\/interface\/main\/messages\/messages.php?go=Recalls","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req_strict":["!disable_rcb"]},{"label":"Messages","menu_id":"msg0","target":"msg","url":"\/interface\/main\/messages\/messages.php?form_active=1","children":[],"requirement":0,"acl_req":["patients","notes"]},{"label":"Patient","menu_id":"patimg","children":[{"label":"New\/Search","menu_id":"new0","target":"pat","url":"\/interface\/new\/new.php","children":[],"requirement":0,"acl_req":["patients","demo","write","addonly"],"global_req":"full_new_patient_form"},{"label":"Dashboard","menu_id":"dem1","target":"pat","url":"\/interface\/patient_file\/summary\/demographics.php","children":[],"requirement":1,"acl_req":["patients","demo"]},{"label":"Visits","icon":"fa-caret-right","children":[{"label":"Create Visit","menu_id":"nen1","target":"enc","url":"\/interface\/forms\/newpatient\/new.php?autoloaded=1&calenc=","children":[],"requirement":1},{"label":"Current","menu_id":"enc2","target":"enc","url":"\/interface\/patient_file\/encounter\/encounter_top.php","children":[],"requirement":3,"acl_req":["patients","appt"]},{"label":"Visit History","menu_id":"ens1","target":"enc","url":"\/interface\/patient_file\/history\/encounters.php","children":[],"requirement":1,"acl_req":["patients","appt"]}],"requirement":0},{"label":"Records","icon":"fa-caret-right","children":[{"label":"Patient Record Request","menu_id":"prq1","target":"enc","url":"\/interface\/patient_file\/transaction\/record_request.php","children":[],"requirement":1,"acl_req":["patients","med"]}],"requirement":0}],"requirement":0},{"label":"Fees","menu_id":"feeimg","children":[{"label":"Fee Sheet","menu_id":"cod2","target":"enc","url":"\/interface\/patient_file\/encounter\/load_form.php?formname=fee_sheet","children":[],"requirement":2,"acl_req":[["encounters","coding","write"],["encounters","coding_a","write"]]},{"label":"Payment","menu_id":"pay1","target":"enc","url":"\/interface\/patient_file\/front_payment.php","children":[],"requirement":1,"acl_req":["acct","bill","write"]},{"label":"Checkout","menu_id":"bil1","target":"enc","url":"\/interface\/patient_file\/pos_checkout.php?framed=1","children":[],"requirement":1,"acl_req":["acct","bill","write"]},{"label":"Billing Manager","menu_id":"bil0","target":"bil0","url":"\/interface\/billing\/billing_report.php","children":[],"requirement":0,"acl_req":[["acct","eob","write"],["acct","bill","write"]],"global_req":"!simplified_demographics"},{"label":"Batch Payments","menu_id":"npa0","target":"pay","url":"\/interface\/billing\/new_payment.php","children":[],"requirement":0,"acl_req":[["acct","eob","write"],["acct","bill","write"]],"global_req":"enable_batch_payment"},{"label":"Posting Payments","menu_id":"eob","target":"bil","url":"\/interface\/billing\/sl_eob_search.php","children":[],"requirement":0,"global_req":"enable_posting","acl_req":["acct","eob","write"]},{"label":"EDI History","menu_id":"edi0","target":"edi","url":"\/interface\/billing\/edih_view.php","children":[],"requirement":0,"acl_req":["acct","eob"],"global_req":"enable_edihistory_in_left_menu"}],"requirement":0,"global_req":"enable_fees_in_left_menu"},{"label":"Modules","menu_id":"modimg","children":[{"label":"Manage Modules","menu_id":"adm0","target":"adm","url":"\/interface\/modules\/zend_modules\/public\/Installer","children":[],"requirement":0,"acl_req":["admin","manage_modules"]},{"label":"Carecoordination","url":"\/interface\/modules\/zend_modules\/public\/carecoordination\/index","requirement":0,"target":"mod"}],"requirement":0,"acl_req":["menus","modle"]},{"label":"Procedures","menu_id":"proimg","children":[{"label":"Providers","menu_id":"orl0","target":"pat","url":"\/interface\/orders\/procedure_provider_list.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Configuration","menu_id":"ort0","target":"pat","url":"\/interface\/orders\/types.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Load Compendium","menu_id":"orc0","target":"pat","url":"\/interface\/orders\/load_compendium.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Pending Review","menu_id":"orp1","target":"enc","url":"\/interface\/orders\/orders_results.php?review=1","children":[],"requirement":1,"acl_req":["patients","lab"]},{"label":"Patient Results","menu_id":"orr1","target":"enc","url":"\/interface\/orders\/orders_results.php","children":[],"requirement":1,"acl_req":["patients","lab"]},{"label":"Lab Overview","menu_id":"lda1","target":"enc","url":"\/interface\/patient_file\/summary\/labdata.php","children":[],"requirement":1,"acl_req":["patients","lab"]},{"label":"Batch Results","menu_id":"orb0","target":"pat","url":"\/interface\/orders\/orders_results.php?batch=1","children":[],"requirement":0,"acl_req":["patients","lab"]},{"label":"Electronic Reports","menu_id":"ore0","target":"pat","url":"\/interface\/orders\/list_reports.php","children":[],"requirement":0,"acl_req":["patients","lab"]},{"label":"Lab Documents","menu_id":"dld0","target":"pat","url":"\/interface\/main\/display_documents.php","children":[],"requirement":0,"acl_req":["patients","lab"]}],"requirement":0},{"label":"Admin","menu_id":"admimg","children":[{"label":"Config","menu_id":"adm0","target":"adm","url":"\/interface\/super\/edit_globals.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Clinic","icon":"fa-caret-right","children":[{"label":"Facilities","menu_id":"adm0","target":"adm","url":"\/interface\/usergroup\/facilities.php","children":[],"requirement":0,"acl_req":["admin","users"]},{"label":"Calendar","menu_id":"adm0","target":"adm","url":"\/interface\/main\/calendar\/index.php?module=PostCalendar&type=admin&func=modifyconfig","children":[],"requirement":0,"acl_req":["admin","calendar"],"global_req":"!disable_calendar"},{"label":"Import Holidays","menu_id":"adm0","target":"adm","url":"\/interface\/main\/holidays\/import_holidays.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":[["admin","users"],["admin","calendar"],["admin","super"]]},{"label":"Patients","icon":"fa-caret-right","children":[{"label":"Patient Reminders","menu_id":"adm0","target":"adm","url":"\/interface\/patient_file\/reminder\/patient_reminders.php?mode=admin&patient_id=","children":[],"requirement":0,"acl_req":["admin","super"],"global_req":"enable_cdr"},{"label":"Merge Patients","menu_id":"adm0","target":"adm","url":"\/interface\/patient_file\/merge_patients.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Manage Duplicates","menu_id":"adm0","target":"adm","url":"\/interface\/patient_file\/manage_dup_patients.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":[["admin","super"]]},{"label":"Practice","icon":"fa-caret-right","children":[{"label":"Practice Settings","menu_id":"adm0","target":"adm","url":"\/controller.php?practice_settings&pharmacy&action=list","children":[],"requirement":0,"acl_req":["admin","practice"]},{"label":"Rules","menu_id":"adm0","target":"adm","url":"\/interface\/super\/rules\/index.php?action=browse!list","children":[],"requirement":0,"acl_req":["admin","super"],"global_req":"enable_cdr"},{"label":"Alerts","menu_id":"adm0","target":"adm","url":"\/interface\/super\/rules\/index.php?action=alerts!listactmgr","children":[],"requirement":0,"acl_req":["admin","super"],"global_req":"enable_cdr"}],"requirement":0,"acl_req":[["admin","practice"],["admin","super"]]},{"label":"Coding","icon":"fa-caret-right","children":[{"label":"Codes","menu_id":"cod0","target":"cod","url":"\/interface\/patient_file\/encounter\/superbill_custom_full.php","children":[],"requirement":0,"acl_req":["admin","superbill"]},{"label":"Native Data Loads","menu_id":"cod0","target":"cod","url":"\/interface\/super\/load_codes.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"External Data Loads","menu_id":"adm0","target":"adm","url":"\/interface\/code_systems\/dataloads_ajax.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":[["admin","superbill"],["admin","super"]]},{"label":"Forms","icon":"fa-caret-right","children":[{"label":"Forms Administration","menu_id":"adm0","target":"adm","url":"\/interface\/forms_admin\/forms_admin.php","children":[],"requirement":0,"acl_req":["admin","forms"]},{"label":"Layouts","menu_id":"adm0","target":"adm","url":"\/interface\/super\/edit_layout.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Lists","menu_id":"adm0","target":"adm","url":"\/interface\/super\/edit_list.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":[["admin","forms"],["admin","super"]]},{"label":"Documents","icon":"fa-caret-right","children":[{"label":"Document Templates","menu_id":"adm0","target":"adm","url":"\/interface\/super\/manage_document_templates.php","children":[],"requirement":0,"acl_req":["admin","practice"]}],"requirement":0,"acl_req":[["admin","practice"]]},{"label":"System","icon":"fa-caret-right","children":[{"label":"Backup","menu_id":"adm0","target":"adm","url":"\/interface\/main\/backup.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Files","menu_id":"adm0","target":"adm","url":"\/interface\/super\/manage_site_files.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Language","menu_id":"adm0","target":"adm","url":"\/interface\/language\/language.php","children":[],"requirement":0,"acl_req":["admin","language"]},{"label":"Certificates","menu_id":"adm0","target":"adm","url":"\/interface\/usergroup\/ssl_certificates_admin.php","children":[],"requirement":0,"acl_req":["admin","users"]},{"label":"Logs","menu_id":"adm0","target":"adm","url":"\/interface\/logview\/logview.php","children":[],"requirement":0,"acl_req":["admin","users"]},{"label":"Audit Log Tamper","menu_id":"adm0","target":"adm","url":"\/interface\/reports\/audit_log_tamper_report.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Diagnostics","menu_id":"adm0","target":"adm","url":"\/interface\/main\/calendar\/index.php?module=PostCalendar&type=admin&func=testSystem","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"API Clients","menu_id":"adm0","target":"adm","url":"\/interface\/smart\/admin-client.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":[["admin","super"],["admin","language"],["admin","users"]]},{"label":"Users","menu_id":"adm0","target":"adm","url":"\/interface\/usergroup\/usergroup_admin.php","children":[],"requirement":0,"acl_req":["admin","users"]},{"label":"Address Book","menu_id":"adb0","target":"adm","url":"\/interface\/usergroup\/addrbook_list.php","children":[],"requirement":0,"acl_req":["admin","practice"]},{"label":"ACL","menu_id":"adm0","target":"adm","url":"\/interface\/usergroup\/adminacl.php","children":[],"requirement":0,"acl_req":["admin","acl"]}],"requirement":0,"acl_req":[["admin","calendar"],["admin","forms"],["admin","practice"],["admin","users"],["admin","acl"],["admin","super"],["admin","superbill"]]},{"label":"Reports","menu_id":"repimg","children":[{"label":"Clients","icon":"fa-caret-right","children":[{"label":"List","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/patient_list.php","children":[],"requirement":0,"acl_req":["patients","demo"]},{"label":"Rx","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/prescriptions_report.php","children":[],"requirement":0,"acl_req":["patients","rx"],"global_req":"!disable_prescriptions"},{"label":"Patient List Creation","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/patient_list_creation.php","children":[],"requirement":0,"acl_req":["patients","med"]},{"label":"Message List","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/message_list.php","children":[],"requirement":0,"acl_req":["patients","med"]},{"label":"Clinical","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/clinical_reports.php","children":[],"requirement":0,"acl_req":["patients","med"]},{"label":"Referrals","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/referrals_report.php","children":[],"requirement":0,"acl_req":["patients","med"]},{"label":"Immunization Registry","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/immunization_report.php","children":[],"requirement":0,"acl_req":["patients","med"]}],"requirement":0},{"label":"Clinic","icon":"fa-caret-right","children":[{"label":"Report Results","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/report_results.php","children":[],"requirement":0,"acl_req":["patients","med"],"global_req":["enable_cdr","enable_cqm","enable_amc"]},{"label":"Standard Measures","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/cqm.php?type=standard","children":[],"requirement":0,"acl_req":["patients","med"],"global_req":"enable_cdr"},{"label":"Automated Measures (AMC)","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/cqm.php?type=amc","children":[],"requirement":0,"acl_req":["patients","med"],"global_req":"enable_amc"},{"label":"2025 Real World Testing Report","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/rwt_2025_report.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Alerts Log","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/cdr_log.php","children":[],"requirement":0,"acl_req":["patients","med"]}],"requirement":0,"global_req_strict":["enable_cdr","enable_alert_log"]},{"label":"Visits","icon":"fa-caret-right","children":[{"label":"Daily Report","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/daily_summary_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Appointments","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/appointments_report.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req":"!disable_calendar"},{"label":"Patient Flow Board","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/patient_flow_board_report.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req_strict":["!disable_pat_trkr","!disable_calendar"]},{"label":"Encounters","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/encounters_report.php","children":[],"requirement":0,"acl_req":["encounters","coding_a"]},{"label":"Appt-Enc","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/appt_encounter_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"],"global_req":"!disable_calendar"},{"label":"Superbill","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/custom_report_range.php","children":[],"requirement":0,"acl_req":["encounters","coding_a"],"global_req":"!ippf_specific"},{"label":"Eligibility","menu_id":"rep0","target":"rep","url":"\/interface\/billing\/edi_270.php","children":[],"requirement":0,"acl_req":["patients","demo"]},{"label":"Eligibility Response","menu_id":"rep0","target":"rep","url":"\/interface\/billing\/edi_271.php","children":[],"requirement":0,"acl_req":["patients","demo"]},{"label":"Chart Activity","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/chart_location_activity.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req":"!disable_chart_tracker"},{"label":"Charts Out","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/charts_checked_out.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req":"!disable_chart_tracker"},{"label":"Services","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/services_by_category.php","children":[],"requirement":0},{"label":"Syndromic Surveillance","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/non_reported.php","children":[],"requirement":0,"acl_req":["patients","med"]}],"requirement":0},{"label":"Financial","icon":"fa-caret-right","children":[{"label":"Sales","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/sales_by_item.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Cash Rec","menu_id":"rep0","target":"rep","url":"\/interface\/billing\/sl_receipts_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Front Rec","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/front_receipts_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Pmt Method","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/receipts_by_method_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Collections and Aging","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/collections_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Pat Ledger","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/pat_ledger.php?form=0","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Financial Summary by Service Code","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/svc_code_financial_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Payment Processing","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/payment_processing_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]}],"requirement":0},{"label":"Procedures","icon":"fa-caret-right","children":[{"label":"Pending Res","url":"\/interface\/orders\/pending_orders.php","target":"rep","children":[],"requirement":0,"acl_req":["patients","lab"]},{"label":"Statistics","url":"\/interface\/orders\/procedure_stats.php","target":"rep","children":[],"requirement":0,"acl_req":["patients","lab"]}],"requirement":0},{"label":"Insurance","icon":"fa-caret-right","children":[{"label":"Distribution","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/insurance_allocation_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Indigents","menu_id":"rep0","target":"rep","url":"\/interface\/billing\/indigent_patients_report.php","children":[],"requirement":0,"acl_req":["acct","rep_a"]},{"label":"Unique SP","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/unique_seen_patients_report.php","children":[],"requirement":0,"acl_req":["patients","demo"]}],"requirement":0,"global_req":"!simplified_demographics"},{"label":"Blank Forms","icon":"fa-caret-right","children":[{"label":"Core","icon":"fa-caret-right","children":[{"label":"Demographics","url":"\/interface\/patient_file\/summary\/demographics_print.php","target":"pop","requirement":0},{"label":"Superbill\/Fee Sheet","url":"\/interface\/patient_file\/printed_fee_sheet.php","target":"pop","requirement":0}],"requirement":0}],"requirement":0},{"label":"Services","icon":"fa-caret-right","children":[{"label":"Background Services","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/background_services.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"Direct Message Log","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/direct_message_log.php","children":[],"requirement":0,"acl_req":["admin","super"]},{"label":"IP Tracker","menu_id":"rep0","target":"rep","url":"\/interface\/reports\/ip_tracker.php","children":[],"requirement":0,"acl_req":["admin","super"]}],"requirement":0,"acl_req":["admin","super"]}],"requirement":0},{"label":"Miscellaneous","menu_id":"misimg","children":[{"label":"Portal Dashboard","menu_id":"por2","target":"por","url":"\/portal\/patient\/provider","children":[],"requirement":0,"global_req_strict":"portal_onsite_two_enable","acl_req":["patientportal","portal"]},{"label":"Dicom Viewer","menu_id":"dvwr","target":"msc","url":"\/library\/dicom_frame.php","children":[],"requirement":0,"acl_req":["patients","docs"]},{"label":"Patient Education","menu_id":"ped0","target":"msc","url":"\/interface\/reports\/patient_edu_web_lookup.php","children":[],"requirement":0},{"label":"Authorizations","menu_id":"aun0","target":"msc","url":"\/interface\/main\/authorizations\/authorizations.php","children":[],"requirement":0,"acl_req":[["encounters","auth"],["encounters","auth_a"]]},{"label":"Chart Tracker","menu_id":"cht0","target":"msc","url":"\/custom\/chart_tracker.php","children":[],"requirement":0,"acl_req":["patients","appt"],"global_req":"!disable_chart_tracker"},{"label":"Office Notes","menu_id":"ono0","target":"msc","url":"\/interface\/main\/onotes\/office_comments.php","children":[],"requirement":0,"acl_req":["encounters","notes"]},{"label":"Batch Communication Tool","menu_id":"adm0","target":"msc","url":"\/interface\/batchcom\/batchcom.php","children":[],"requirement":0,"acl_req":[["admin","batchcom"],["admin","practice"]]},{"label":"New Documents","menu_id":"adm0","target":"msc","url":"\/controller.php?document&list&patient_id=00","children":[],"requirement":0,"acl_req":["patients","docs","write","addonly"]},{"label":"Blank Forms","icon":"fa-caret-right","children":[{"label":"Demographics","url":"\/interface\/patient_file\/summary\/demographics_print.php","target":"msc","children":[],"requirement":0},{"label":"Superbill\/Fee Sheet","url":"\/interface\/patient_file\/printed_fee_sheet.php","target":"msc","children":[],"requirement":0},{"label":"Referral","url":"\/interface\/patient_file\/transaction\/print_referral.php","target":"msc","children":[],"requirement":0}],"requirement":0}],"requirement":0},{"label":"Popups","menu_id":"popup","children":[{"label":"Issues","menu_id":"Popup:Issues","url":"\/interface\/patient_file\/problem_encounter.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","med"],"global_req":"allow_issue_menu_link"},{"label":"Export","menu_id":"Popup:Export","url":"\/custom\/export_xml.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","demo"],"global_req":"!ippf_specific"},{"label":"Import","menu_id":"Popup:Import","url":"\/custom\/import_xml.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","demo","write"],"global_req":"!ippf_specific"},{"label":"Appointments","menu_id":"Popup:Appts","url":"\/interface\/reports\/appointments_report.php?patient=","target":"pop","children":[],"requirement":1,"acl_req":["patients","appt"],"global_req":"!disable_calendar"},{"label":"Superbill","menu_id":"Popup:Superbill","url":"\/interface\/patient_file\/printed_fee_sheet.php?fill=1","target":"pop","children":[],"requirement":1,"acl_req":["patients","med"]},{"label":"Payment","menu_id":"Popup:Payment","url":"\/interface\/patient_file\/front_payment.php","target":"pop","children":[],"requirement":1,"acl_req":["acct","bill","write"]},{"label":"Letter","menu_id":"Popup:Letter","url":"\/interface\/patient_file\/letter.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","med"]},{"label":"Chart Label","menu_id":"Popup:Chart Label","url":"\/interface\/patient_file\/label.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","demo"],"global_req":"chart_label_type"},{"label":"Barcode Label","menu_id":"Popup:Barcode Label","url":"\/interface\/patient_file\/barcode_label.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","demo"],"global_req":"barcode_label_type"},{"label":"Address Label","menu_id":"Popup:Address Label","url":"\/interface\/patient_file\/addr_label.php","target":"pop","children":[],"requirement":1,"acl_req":["patients","demo"],"global_req":"addr_label_type"}],"requirement":0}];
+    app_view_model.application_data.menu=ko.observableArray();
+    for(var menuIdx=0;menuIdx<menu_objects.length;menuIdx++)
+    {
+        var curObj=menu_objects[menuIdx];
+        process_menu_object(curObj,app_view_model.application_data.menu);
+    }
+</script>
+
+<script>
+    app_view_model.application_data.tabs.tabsList.push(new tabStatus("Loading Calendar", "\/openemr\/interface\/main\/main_info.php", "cal", "Loading", true, true, false));
+app_view_model.application_data.tabs.tabsList.push(new tabStatus("Loading Message Inbox", "\/openemr\/interface\/main\/messages\/messages.php?form_active=1", "msg", "Loading", true, false, false));
+
+    app_view_model.application_data.user(new user_data_view_model("admin","Billy","Smith","Default"));
+</script>
+<style>
+  html,
+  body {
+    width: max-content;
+    min-height: 100% !important;
+    height: 100% !important;
+  }
+</style>
+</head>
+
+<body class="min-vw-100 modal-open">
+<!-- Below iframe is to support logout, which needs to be run in an inner iframe to work as intended -->
+<iframe name="logoutinnerframe" id="logoutinnerframe" style="visibility:hidden; position:absolute; left:0; top:0; height:0; width:0; border:none;" src="about:blank"></iframe>
+<div id="mainBox">
+    <nav class="navbar navbar-expand-xl navbar-light bg-light py-0">
+                    <a class="navbar-brand" href="https://www.open-emr.org" title="OpenEMR Website" rel="noopener" target="_blank">
+                <img src="/openemr/public/images/logos/core/menu/primary/logo.svg?t=1764316914" class="d-inline-block align-middle" height="16" alt="Main Menu Logo">
+            </a>
+                <button class="navbar-toggler mr-auto" type="button" data-toggle="collapse" data-target="#mainMenu" aria-controls="mainMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainMenu" data-bind="template: {name: 'menu-template', data: application_data}">
+    <div class="appMenu navbar-nav mr-auto" data-bind="foreach: menu">
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Calendar</div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Finder</div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Flow</div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Recalls</div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Messages</div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Patient</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">New/Search</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Dashboard</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Visits</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Create Visit</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Current</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Visit History</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Records</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient Record Request</div>
+</li>
+        </ul>
+    </div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Fees</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Fee Sheet</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Payment</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Checkout</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Billing Manager</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Batch Payments</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Posting Payments</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">EDI History</div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Modules</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Manage Modules</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Carecoordination</div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Procedures</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Providers</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Configuration</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Load Compendium</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Pending Review</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient Results</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Lab Overview</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Batch Results</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Electronic Reports</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Lab Documents</div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Admin</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Config</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Clinic</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Facilities</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Calendar</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Import Holidays</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Patients</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient Reminders</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Merge Patients</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Manage Duplicates</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Practice</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Practice Settings</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Rules</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Alerts</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Coding</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Codes</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Native Data Loads</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">External Data Loads</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Forms</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Forms Administration</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Layouts</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Lists</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Documents</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Document Templates</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">System</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Backup</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Files</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Language</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Certificates</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Logs</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Audit Log Tamper</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Diagnostics</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">API Clients</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Users</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Address Book</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">ACL</div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Reports</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Clients</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">List</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Rx</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient List Creation</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Message List</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Clinical</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Referrals</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Immunization Registry</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Clinic</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Report Results</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Standard Measures</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Automated Measures (AMC)</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">2025 Real World Testing Report</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Alerts Log</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Visits</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Daily Report</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Appointments</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient Flow Board</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Encounters</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Appt-Enc</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Superbill</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Eligibility</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Eligibility Response</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Chart Activity</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Charts Out</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Services</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Syndromic Surveillance</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Financial</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Sales</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Cash Rec</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Front Rec</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Pmt Method</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Collections and Aging</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Pat Ledger</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Financial Summary by Service Code</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Payment Processing</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Procedures</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Pending Res</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Statistics</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Insurance</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Distribution</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Indigents</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Unique SP</div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Blank Forms</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Core</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Demographics</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Superbill/Fee Sheet</div>
+</li>
+        </ul>
+    </div>
+</li>
+        </ul>
+    </div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Services</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Background Services</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Direct Message Log</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">IP Tracker</div>
+</li>
+        </ul>
+    </div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Miscellaneous</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Portal Dashboard</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Dicom Viewer</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Patient Education</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Authorizations</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Chart Tracker</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Office Notes</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Batch Communication Tool</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">New Documents</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton fa-caret-right"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Blank Forms</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Demographics</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Superbill/Fee Sheet</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Referral</div>
+</li>
+        </ul>
+    </div>
+</li>
+        </ul>
+    </div>
+</div>
+    
+        <div data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon" class="fa closeButton"></i>
+    <div class="menuSection dropdown">
+        <div class="menuLabel px-1 dropdown-toggle oe-dropdown-toggle" data-bind="text:label" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Popups</div>
+        <ul class="menuEntries dropdown-menu rounded-0 border-0" name="menuEntries" data-bind="foreach: children">
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Issues</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Export</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Import</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Appointments</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Superbill</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Payment</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Letter</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Chart Label</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Barcode Label</div>
+</li>
+        
+            <li data-bind="template: {name:header ? 'menu-header' : 'menu-action', data: $data }">
+    <i data-bind="css: icon,text:helperText" class="fa closeButton"></i>
+    <div class="menuLabel px-1 menuDisabled" data-bind="text:label,click: menuActionClick,css: {menuDisabled: ! enabled()}">Address Label</div>
+</li>
+        </ul>
+    </div>
+</div>
+    </div>
+</div>
+                    <form name="frm_search_globals" class="form-inline">
+                <div class="input-group">
+                    <input type="text" id="anySearchBox" class="form-control-sm any-search-legacy form-control" name="anySearchBox" placeholder="Search by any demographics" autocomplete="off" style="">
+                    <div class="input-group-append">
+                        <button type="button" id="search_globals" class="btn btn-sm btn-secondary btn-globals-legacy" title="Search for patient by entering whole or part of any demographics field information" data-bind="event: {mousedown: viewPtFinder.bind( $data, 'The search field cannot be empty. Please enter a search term', 'dual')}">
+                            <i class="fa fa-search">&nbsp;</i></button>
+                    </div>
+                </div>
+            </form>
+                <span id="userData" data-bind="template: {name: 'user-data-template', data: application_data}">
+    <!-- ko with: user -->
+    <div id="username" class="appMenu ml-3">
+        <div class="menuLabel dropdown" id="username" title="Current user" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="fa-stack">
+                        <i class="far text-muted fa-circle fa-2x fa-stack-2x"></i>
+                        <i class="fa text-muted fa-user fa-lg fa-stack-1x" aria-hidden="true" id="user_icon"></i>
+                    </span>
+            <ul id="userdropdown" class="userfunctions menuEntries dropdown-menu dropdown-menu-right menu-shadow-ovr rounded-0 border-0">
+                <li class="menuLabel">
+                    <span class="font-weight-bold"><span data-bind="text:fname">Billy</span> <span data-bind="text:lname">Smith</span></span>
+                </li>
+                <li class="menuLabel" data-bind="click: editSettings"><i class="fa fa-fw pr-2 text-muted fa-cog"></i>&nbsp;Settings</li>
+                <li class="menuLabel" data-bind="click: changePassword"><i class="fa fa-fw pr-2 text-muted fa-lock"></i>&nbsp;Change Password</li>
+                <li class="menuLabel" data-bind="click: changeMFA"><i class="fa fa-fw pr-2 text-muted fa-key"></i>&nbsp;MFA Management</li>
+                <div class="dropdown-divider"></div>
+                <li class="menuLabel" data-bind="click: function() {navigateTab('./../about_page.php', 'About', function() {activateTabByName('About',true);});}"><i class="fa fa-fw pr-2 text-muted fa-info"></i>&nbsp;About OpenEMR</li>
+                <div class="dropdown-divider"></div>
+                <li class="menuLabel" data-bind="click: logout"><i class="fa fa-fw pr-2 text-muted fa-sign-out-alt"></i>&nbsp;Logout</li>
+            </ul>
+        </div>
+    </div>
+    <!-- /ko -->
+</span>
+    </nav>
+    <div id="attendantData" class="body_title acck" data-bind="template: {name: app_view_model.attendant_template_type, data: application_data}">
+    <div class="d-lg-inline-flex w-100">
+        <div class="flex-fill">
+            <div class="float-left mx-2">
+                <!-- ko if: patient --><!-- /ko -->
+            </div>
+            <div class="form-group">
+                <!-- ko if: patient --><!-- /ko -->
+            </div>
+        </div>
+
+        <div class="flex-fill ml-2">
+            <!-- ko if: patient --><!-- /ko --><!-- patient -->
+        </div>
+
+        <div class="flex-column mx-2">
+            <!-- ko if: user -->
+            <!-- ko with: user -->
+            <!-- ko if:messages() -->
+            <span class="mr-auto">
+                <a class="btn btn-secondary btn-sm" href="#" data-bind="click: viewMessages" title="View Messages">
+                    <i class="fa fa-envelope"></i>&nbsp;<span class="badge badge-primary" style="display:inline" data-bind="text: messages()">2</span>
+                </a>
+            </span>
+            <!-- /ko --><!-- messages -->
+            <!-- ko if: portal() --><!-- /ko --><!-- portal alert -->
+            <!-- ko if: servicesOther() --><!-- /ko --><!-- servicesOther alert -->
+            <!-- /ko --><!-- with user -->
+            <!-- /ko --><!-- user -->
+        </div>
+    </div>
+</div>
+    <div class="body_title" id="tabs_div" data-bind="template: {name: 'tabs-controls', data: application_data}">
+    <div class="tabControls" data-bind="with: tabs">
+        <div class="tabsNoHover w-1">
+            <i class="fa fa-caret-up menu_arrow" id="patient_caret" title="Toggle the Patient Panel" aria-hidden="true"></i>
+        </div>
+        <!-- ko  foreach: tabsList -->
+        <div class="tabSpan bgcolor2 tabsNoHover" data-bind="click: tabClicked, css: {tabsNoHover: !visible()}">
+            <span class="tabTitle pr-2 tabHidden" data-bind="text: title, click: tabClicked, css: {tabHidden: !visible()}">Calendar</span>
+            <span class="fa fa-fw fa-xs mr-1 fa-sync" data-bind="click: tabRefresh, class: spinner"></span>
+            <!--ko if:!locked() -->
+            <span class="fa fa-fw fa-xs mr-1 fa-unlock" data-bind="click: tabLockToggle"></span>
+            <!-- /ko -->
+            <!--ko if:locked() --><!-- /ko -->
+            <!-- ko if:closable-->
+            <span class="fa fa-fw fa-xs fa-times" data-bind="click: tabClose"></span>
+            <!-- /ko -->
+        </div>
+        
+        <div class="tabSpan bgcolor2 tabsNoHover" data-bind="click: tabClicked, css: {tabsNoHover: !visible()}">
+            <span class="tabTitle pr-2 tabHidden" data-bind="text: title, click: tabClicked, css: {tabHidden: !visible()}">Message Center</span>
+            <span class="fa fa-fw fa-xs mr-1 fa-sync" data-bind="click: tabRefresh, class: spinner"></span>
+            <!--ko if:!locked() -->
+            <span class="fa fa-fw fa-xs mr-1 fa-unlock" data-bind="click: tabLockToggle"></span>
+            <!-- /ko -->
+            <!--ko if:locked() --><!-- /ko -->
+            <!-- ko if:closable-->
+            <span class="fa fa-fw fa-xs fa-times" data-bind="click: tabClose"></span>
+            <!-- /ko -->
+        </div>
+        
+        <div class="tabSpan bgcolor2" data-bind="click: tabClicked, css: {tabsNoHover: !visible()}">
+            <span class="tabTitle pr-2" data-bind="text: title, click: tabClicked, css: {tabHidden: !visible()}">Address Book</span>
+            <span class="fa fa-fw fa-xs mr-1 fa-sync" data-bind="click: tabRefresh, class: spinner"></span>
+            <!--ko if:!locked() -->
+            <span class="fa fa-fw fa-xs mr-1 fa-unlock" data-bind="click: tabLockToggle"></span>
+            <!-- /ko -->
+            <!--ko if:locked() --><!-- /ko -->
+            <!-- ko if:closable-->
+            <span class="fa fa-fw fa-xs fa-times" data-bind="click: tabClose"></span>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+        <div class="tabsNoHover w-100"></div>
+    </div>
+</div>
+    <div class="mainFrames d-flex flex-row" id="mainFrames_div">
+        <div id="framesDisplay" data-bind="template: {name: 'tabs-frames', data: application_data}">
+
+    <!-- ko  foreach: tabs.tabsList -->
+    <div class="frameDisplay" data-bind="visible:visible" style="display: none;">
+        <h5 class="text-center position-relative" style="top: 50%; display: none;" data-bind="text: loading_text,visible:loading_text_status">Loading...</h5>
+        <iframe data-bind="location: $data, iframeName: $data.name, " src="/openemr/interface/main/main_info.php" name="cal">
+
+        </iframe>
+    </div>
+    
+    <div class="frameDisplay" data-bind="visible:visible" style="display: none;">
+        <h5 class="text-center position-relative" style="top: 50%; display: none;" data-bind="text: loading_text,visible:loading_text_status">Loading...</h5>
+        <iframe data-bind="location: $data, iframeName: $data.name, " src="/openemr/interface/main/messages/messages.php?form_active=1" name="msg">
+
+        </iframe>
+    </div>
+    
+    <div class="frameDisplay" data-bind="visible:visible" style="">
+        <h5 class="text-center position-relative" style="top: 50%; display: none;" data-bind="text: loading_text,visible:loading_text_status">Loading Address Book...</h5>
+        <iframe data-bind="location: $data, iframeName: $data.name, " src="/openemr/interface/usergroup/addrbook_list.php" name="adm">
+
+        </iframe>
+    </div>
+    <!-- /ko -->
+</div>
+    </div>
+    
+<div class="product-registration-modal modal fade">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"></div>
+            <div class="modal-body">
+                                            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary submit"><span id="submit_registration_loader" class="fa fa-spinner fa-spin" style="display: none;"></span> Submit</button>
+                <button type="button" class="btn btn-secondary nothanks">Ask again later</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+    ko.applyBindings(app_view_model);
+
+    $(function () {
+        $('.dropdown-toggle').dropdown();
+        $('#patient_caret').click(function () {
+            $('#attendantData').slideToggle();
+            $('#patient_caret').toggleClass('fa-caret-down').toggleClass('fa-caret-up');
+        });
+        if ($('body').css('direction') == "rtl") {
+            $('.dropdown-menu-right').each(function () {
+                $(this).removeClass('dropdown-menu-right');
+            });
+        }
+    });
+    $(function () {
+        $('#logo_menu').focus();
+    });
+    $('#anySearchBox').keypress(function (event) {
+        if (event.which === 13 || event.keyCode === 13) {
+            event.preventDefault();
+            $('#search_globals').mousedown();
+        }
+    });
+    document.addEventListener('touchstart', {}); //specifically added for iOS devices, especially in iframes
+        $(function () {
+        goRepeaterServices();
+    });
+    </script>
+
+
+
+<div id="8d3b970ef2ae9f82532aNaN96c30c77" class="modal fade dialogModal show" tabindex="-1" role="dialog" name="8d3b970ef2ae9f82532aNaN96c30c77" style="display: block;" aria-modal="true"><style>.modal-custom-8d3b970ef2ae9f82532aNaN96c30c77 {max-width:29.4% !important;}</style><style>.drag-resize {touch-action:none;user-select:none;}</style><div class="modal-dialog  modal-custom-8d3b970ef2ae9f82532aNaN96c30c77" role="dialog" style="margin: 0.75rem auto auto;"><div class="modal-content resize-action" style="height: 89.8vh; max-height: 94vh;"><div class="closeDlgIframe" data-dismiss="modal"></div><div class="modal-body px-1 h-100"><iframe id="modalframe" class="modalIframe w-100 h-100 border-0" name="8d3b970ef2ae9f82532aNaN96c30c77" src="https://demo.openemr.io/openemr/interface/usergroup/addrbook_edit.php?type="></iframe></div></div></div></div><div class="modal-backdrop fade show"></div></body></html>
